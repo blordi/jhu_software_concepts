@@ -1,8 +1,8 @@
 """
 Ben L - 8.29.25
-The run file to start the website.  The site is build using a package structure, so first import the app from the
-package, then run the app.
-I am hosting on 0.0.0.0 and port 8080
+This script imports a Flask app from personal_website and runs it.
+Usage:
+    python run.py
 """
 from personal_website import app
 
