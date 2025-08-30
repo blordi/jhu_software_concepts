@@ -6,3 +6,4 @@ def create_app():
 
     app.register_blueprint(pages.bp)
     return app
+app = create_app()
