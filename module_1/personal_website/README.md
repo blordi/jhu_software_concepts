@@ -5,7 +5,7 @@ This is the Module 1 Assignment Personal Website for the Modern Software Concept
 I created a website using Flask as the framework. The pages are created from templates using the blueprint function in flask.
 
 The HTML and CSS were created with help from Claude Sonnet 4.  I relied on the examples and instruction from 
-https://realpython.com/flask-project/ throught the project.
+https://realpython.com/flask-project/ throughout the project.
 ## Instructions
 #### Make sure you are in the module_1 directory before attempting the following instructions
 
