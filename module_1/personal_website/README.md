@@ -16,7 +16,7 @@ I relied on the examples and instruction from
 https://realpython.com/flask-project/ throughout the project.
 ## Setup Instructions
 ### Prerequisites
-- Python 3.7+
+- Python 3.10+
 - pip (Python package manager)
 
 ### Installation
