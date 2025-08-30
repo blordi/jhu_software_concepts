@@ -1,0 +1,14 @@
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+nav ul li {
+  display: inline;
+  margin: 0 5px;
+}
+
+main {
+  width: 80%;
+  margin: 0 auto;
+}
