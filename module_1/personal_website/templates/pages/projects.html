@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h2>{% block title %}My Projects{% endblock title %}</h2>
+{% endblock header %}
+
+{% block content %}
+  <!-- Projects Introduction -->
+  <section class="projects-intro">
+    <h3>Data Science Portfolio</h3>
+    <p>
+      Here's a collection of my projects for Modern Software Concepts in Python.
+    </p>
+    <a href="https://github.com/blordi" target="_blank" class="github-profile-link">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 19C4 20.5 4 16.5 2 16M22 16V22C22 22 17 20 12 22C7 20 2 22 2 22V16M12 2L22 6.5V17.5L12 22L2 17.5V6.5L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      View All Projects on GitHub
+    </a>
+  </section>
+
+  <!-- Projects Grid -->
+  <section class="projects-grid">
+
+    <!-- Project 1 -->
+    <div class="project-card">
+      <div class="project-header">
+        <h4>Personal Website</h4>
+        <div class="project-tags">
+          <span class="tag">Web Development</span>
+          <span class="tag">Python</span>
+          <span class="tag">Flask</span>
+        </div>
+      </div>
+      <div class="project-content">
+        <p>
+            I created this website! I used Flask as my framework and relied heavily on templating and blueprints.
+            I used Claude Sonnet 4 to create the HTML and CSS.
+        </p>
+      </div>
+      <div class="project-footer">
+        <a href="https://github.com/blordi/module_1" target="_blank" class="project-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 19C4 20.5 4 16.5 2 16M22 16V22C22 22 17 20 12 22C7 20 2 22 2 22V16M12 2L22 6.5V17.5L12 22L2 17.5V6.5L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+{% endblock content %}

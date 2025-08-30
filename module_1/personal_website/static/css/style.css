@@ -60,18 +60,23 @@ nav {
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+  padding: 1rem 0;
 }
 
 nav ul {
   list-style: none;
   display: flex;
-  justify-content: center;
-  padding: 1rem 0;
+  justify-content: flex-end; /* Changed from center to flex-end */
+  align-items: center;
+  padding: 0;
   margin: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-right: 2rem; /* Add some padding from the right edge */
 }
 
 nav ul li {
-  margin: 0 1.5rem;
+  margin: 0 0.75rem; /* Reduced margin slightly for better spacing */
 }
 
 nav ul li a {
@@ -88,6 +93,56 @@ nav ul li a:hover {
   color: #3182ce;
   background: rgba(66, 153, 225, 0.1);
   transform: translateY(-2px);
+}
+
+/* Enhanced Active/Current page styling - Light Blue Gradient */
+nav ul li a.active {
+  background: linear-gradient(135deg, #87ceeb, #add8e6);
+  color: #1a365d;
+  box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+  transform: translateY(-1px);
+}
+
+nav ul li a.active:hover {
+  background: linear-gradient(135deg, #7cc7e8, #9fd3e8);
+  color: #1a365d;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design for Navigation */
+@media (max-width: 768px) {
+  nav ul {
+    justify-content: center; /* Center on mobile for better UX */
+    flex-wrap: wrap;
+    padding-right: 1rem;
+  }
+
+  nav ul li {
+    margin: 0.25rem 0.5rem;
+  }
+
+  nav ul li a {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  nav ul {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  nav ul li {
+    margin: 0;
+  }
+
+  nav ul li a {
+    display: block;
+    text-align: center;
+    width: 100%;
+  }
 }
 
 /* Hero Section */
@@ -474,5 +529,218 @@ nav ul li a:hover {
   .contact-methods {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+}
+
+/* Projects Page Styles */
+.projects-intro {
+  text-align: center;
+  margin-bottom: 4rem;
+  padding: 3rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.projects-intro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4299e1, #9f7aea, #ed64a6);
+}
+
+.projects-intro h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.projects-intro h3::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #4299e1, #9f7aea);
+  border-radius: 2px;
+}
+
+.projects-intro p {
+  font-size: 1.2rem;
+  color: #4a5568;
+  line-height: 1.8;
+  margin: 2rem 0;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.github-profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4299e1;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border: 2px solid #4299e1;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.github-profile-link:hover {
+  background: #4299e1;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.project-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+}
+
+.project-header {
+  padding: 2rem 2rem 1rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.project-header h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background: linear-gradient(135deg, #4299e1, #9f7aea);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.project-content {
+  padding: 1rem 2rem;
+  flex-grow: 1;
+}
+
+.project-content p {
+  color: #4a5568;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.project-highlights ul {
+  list-style: none;
+  padding: 0;
+}
+
+.project-highlights li {
+  color: #4a5568;
+  padding: 0.25rem 0;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.project-highlights li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #48bb78;
+  font-weight: bold;
+}
+
+.project-footer {
+  padding: 1rem 2rem 2rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto;
+}
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4299e1;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #4299e1;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  width: 100%;
+  justify-content: center;
+}
+
+.project-link:hover {
+  background: #4299e1;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design for Projects Page */
+@media (max-width: 768px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .projects-intro {
+    padding: 2rem;
+  }
+
+  .projects-intro h3 {
+    font-size: 2rem;
+  }
+
+  .project-header, .project-content, .project-footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .github-profile-link {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-card {
+    margin: 0 0.5rem;
   }
 }
