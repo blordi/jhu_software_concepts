@@ -1,5 +1,4 @@
 import urllib3
-from bs4 import BeautifulSoup
 import json
 
 def save_data(data, filename='data.json'):
@@ -14,11 +13,11 @@ http = urllib3.PoolManager()
 
 # app_number=range(506400, 986412)
 app_number = range(986410,986413)
-raw_html_list = []
+html_list = []
 for number in app_number:
     print(f"Scraping application number {number}")
     url = f"https://www.thegradcafe.com/result/{number}"
-    raw_html = scrape_data(url)
-    raw_html_list.append({'number': number, 'html': raw_html})
+    html = scrape_data(url)
+    html_list.append({'number': number, 'html': html})
 
-save_data(raw_html_list, 'raw_html_data.json')
+save_data(html_list, 'scraped_app_data.json')
