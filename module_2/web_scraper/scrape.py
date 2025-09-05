@@ -10,7 +10,7 @@ def save_data(data, filename='data.json'):
 def scrape_data(url):
     page = http.request('GET', url)
     soup = BeautifulSoup(page.data, 'html.parser')
-    return soup.text
+    return soup.prettify()
 
 http = urllib3.PoolManager()
 
@@ -20,6 +20,6 @@ for number in page_number:
     url = f"https://www.thegradcafe.com/survey/?page={number}"
     html = scrape_data(url)
     html_list.append({'page': number, 'html': html})
-    print(html)
+
 
 save_data(html_list, 'raw_applicant_data.json')
