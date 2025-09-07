@@ -121,22 +121,30 @@ def clean_html(html):
                 comment = comment_match.group(1).strip() if comment_match else None
         
         # Return dictionary of extracted fields
+        combined_program = None
+        if program_name and university_text:
+            combined_program = f"{program_name}, {university_text}"
+        elif program_name:
+            combined_program = program_name
+        elif university_text:
+            combined_program = university_text
+        else:
+            combined_program = None
+
         return {
-            "app_number": app_number,
-            "program_name": program_name,
-            "university": university_text,
-            "comment": comment,
-            "added_on": added_on,
-            "semester": semester,
-            "applicant_url": applicant_url,
-            "applicant_status": applicant_status,
-            "nationality": nationality,
+            "program": combined_program,
+            "comments": comment,
+            "date_added": added_on,
+            "url": applicant_url,
+            "status": applicant_status,
+            "Term": semester,
+            "US/International": nationality,
             "gre": gre,
             "gre_v": gre_v,
-            "degree": degree,
+            "Degree": degree,
             "gpa": gpa,
             "gre_aw": gre_aw
-        } 
+        }
 
 
 scraped_data = load_data('jhu_software_concepts/module_2/web_scraper/raw_applicant_data.json')
@@ -147,4 +155,4 @@ for entry in scraped_data:
    if application:
          application_data.append(application)
 
-save_data(application_data, 'jhu_software_concepts/module_2/web_scraper/applicant_data.json')
+save_data(application_data, 'jhu_software_concepts/module_2/applicant_data.json')
