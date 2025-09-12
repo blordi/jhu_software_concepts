@@ -101,8 +101,6 @@ with conn.cursor() as cur:
                 SELECT COUNT (*)
                 FROM applicants
                 WHERE
-                llm_generated_program ILIKE '%Computer Science%'
-                AND
                 llm_generated_university ILIKE '%Johns Hopkins University%'
                 AND
                 degree = 'Masters';                
@@ -113,8 +111,6 @@ with conn.cursor() as cur:
                 SELECT COUNT (*)
                 FROM applicants
                 WHERE
-                llm_generated_program ILIKE '%Computer Science%'
-                AND
                 llm_generated_university ILIKE '%Georgetown%'
                 AND
                 degree = 'PhD'

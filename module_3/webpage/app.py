@@ -82,25 +82,17 @@ def dashboard():
                 SELECT COUNT (*)
                 FROM applicants
                 WHERE
-                llm_generated_program ILIKE '%Computer Science%'
-                AND
                 llm_generated_university ILIKE '%Johns Hopkins University%'
                 AND
                 degree = 'Masters';                
                 """
     georgetown_phd_cs_apps = """
-                SELECT COUNT (*)
+                SELECT COUNT(*)
                 FROM applicants
-                WHERE
-                llm_generated_program ILIKE '%Computer Science%'
-                AND
-                llm_generated_university ILIKE '%Georgetown%'
-                AND
-                degree = 'PhD'
-                AND
-                status ILIKE '%accept%'
-                AND
-                term ILIKE '%2025%';                
+                WHERE llm_generated_university ILIKE '%Georgetown%'
+                AND degree ILIKE 'PhD'
+                AND status ILIKE '%accept%'
+                AND term ILIKE '%2025%';
                 """
     int_domestic_acceptance_rates = """
                 WITH acceptance_by_status AS (
