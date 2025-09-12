@@ -1,3 +1,8 @@
+"""
+Module to query data from a PostgreSQL database. Uses psycopg_pool for connecting to the database.
+Executes various SQL queries to analyze applicant data.
+"""
+
 import psycopg_pool
 
 pool = psycopg_pool.ConnectionPool(
@@ -6,13 +11,14 @@ pool = psycopg_pool.ConnectionPool(
 
 conn = pool.getconn()
 with conn.cursor() as cur:
-
+    #Count of Fall 2025 applications
     cur.execute("""
         SELECT COUNT (*) 
                 FROM applicants
                 WHERE TERM = 'Fall 2025';""")
     print("How many entries do you have in your database who have applied for Fall 2025?\n", cur.fetchall(),"\n\n")
 
+    #Percentage of international students
     cur.execute("""
             SELECT
                 ROUND(
@@ -23,6 +29,7 @@ with conn.cursor() as cur:
                 """)
     print("What percentage of entries are from international students (not American or Other)\n", cur.fetchall(),"\n\n")
 
+    #Average GPA, GRE, GRE V, GRE AW of applicants who provide these metrics
     cur.execute("""
             SELECT 
                 'GPA' AS metric,
@@ -59,7 +66,8 @@ with conn.cursor() as cur:
             WHERE gre_aw IS NOT NULL AND gre_aw <= 6;
                 """)
     print("What is the average GPA, GRE, GRE V, GRE AW of applicants who provide these metrics?\n", cur.fetchall(),"\n\n")
-
+    
+    #Average GPA of American students who applied for Fall 2025
     cur.execute("""
                 SELECT 
                 ROUND(AVG(CAST(gpa AS NUMERIC)),2) AS average_value
@@ -72,6 +80,7 @@ with conn.cursor() as cur:
                 """)
     print("What is their average GPA of American students in Fall 2025?\n", cur.fetchall(),"\n\n")
 
+    #Percentage of Fall 2025 applicants who were accepted
     cur.execute("""
                 SELECT
                     ROUND(
@@ -83,6 +92,7 @@ with conn.cursor() as cur:
                 """)
     print("What percent of entries for Fall 2025 are Acceptances (to two decimal places)?\n", cur.fetchall(),"\n\n")
 
+    #Average GPA of applicants who applied for Fall 2025 who are Acceptances
     cur.execute("""
                 SELECT
                     ROUND(
@@ -96,7 +106,8 @@ with conn.cursor() as cur:
                 AND gpa <= 5;
                 """)
     print("What is the average GPA of applicants who applied for Fall 2025 who are Acceptances?\n", cur.fetchall(),"\n\n")
-
+    
+    #How many entries are from applicants who applied to JHU for a masters degrees?
     cur.execute("""
                 SELECT COUNT (*)
                 FROM applicants
@@ -105,8 +116,9 @@ with conn.cursor() as cur:
                 AND
                 degree = 'Masters';                
                 """)
-    print("How many entries are from applicants who applied to JHU for a masters degrees in Computer Science?\n", cur.fetchall(),"\n\n")
+    print("How many entries are from applicants who applied to JHU for a masters degrees?\n", cur.fetchall(),"\n\n")
 
+    #How many entries from 2025 are acceptances from applicants who applied to Georgetown University for a PhD?    
     cur.execute("""
                 SELECT COUNT (*)
                 FROM applicants
@@ -119,8 +131,9 @@ with conn.cursor() as cur:
                 AND
                 term ILIKE '%2025%';                
                 """)
-    print("How many entries from 2025 are acceptances from applicants who applied to Georgetown University for a PhD in Computer Science?\n", cur.fetchall(), "\n\n")
+    print("How many entries from 2025 are acceptances from applicants who applied to Georgetown University for a PhD?\n", cur.fetchall(), "\n\n")
 
+    # Ranked list of universities with highest acceptance rates for international vs. domestic applicants
     cur.execute("""
                 WITH acceptance_by_status AS (
                 SELECT 
@@ -152,6 +165,7 @@ with conn.cursor() as cur:
                 """)
     print("Which universities have the highest acceptance rates for interational students? How about domestic?\n", cur.fetchall(), "\n\n")
     
+    #Average GPA of accepted students vs. rejected students by degree
     cur.execute("""
                 SELECT 
                 degree,

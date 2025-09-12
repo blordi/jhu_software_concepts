@@ -1,3 +1,8 @@
+"""
+A Flask web application that connects to a PostgreSQL database using connection pooling.
+Executes various SQL queries to analyze applicant data and displays the results on a dashboard.
+"""
+
 from flask import Flask, render_template, request, url_for, redirect
 import psycopg_pool
 
@@ -7,6 +12,13 @@ pool = psycopg_pool.ConnectionPool(
     )
 
 def execute_query(query):
+        """
+        Execute a SQL query and return the results.
+        Args:
+            query (str): The SQL query to execute.
+        Returns:
+            list: List of tuples containing the query results.
+        """
     with pool.connection() as conn:
         cur = conn.cursor()
         cur.execute(query)
@@ -14,12 +26,15 @@ def execute_query(query):
         return results
 
 @app.route('/')
-def dashboard():   
+def dashboard():
+    # Define SQL queries   
+    # Number of Fall 2025 applications
     fall_2025_apps = """
                 SELECT COUNT (*) 
                 FROM applicants
                 WHERE TERM = 'Fall 2025';
                 """
+    # Percentage of international students
     international_percentage = """
             SELECT
                 ROUND(
@@ -28,6 +43,7 @@ def dashboard():
                     2
             ) AS international_percentage;
                 """
+    # Average GPA, GRE, GRE V, GRE AW of applicants who provide these metrics
     averages = """
             SELECT 
                 'GPA' AS metric,
@@ -59,6 +75,7 @@ def dashboard():
             FROM applicants 
             WHERE gre_aw IS NOT NULL;
                 """
+    # Average GPA of applicants who applied for Fall 2025 who were accepted
     average_gpa_american_fall_25 = """
                 SELECT 
                 ROUND(AVG(CAST(gpa AS NUMERIC)),2) AS average_value
@@ -69,7 +86,8 @@ def dashboard():
                 AND
                 gpa <= 5;
                 """
-    fall_25_acceptange_percent = """
+    # What percentage of Fall 2025 applicants were accepted
+    all_25_acceptange_percent = """
                 SELECT
                     ROUND(
                         (COUNT(CASE WHEN status ILIKE '%Accepted%' THEN 1 END) * 100.00) / COUNT(*),
@@ -78,6 +96,7 @@ def dashboard():
                 FROM applicants
                 WHERE term = 'Fall 2025';
                 """
+    # How many entries are from applicants who applied to JHU for a masters degrees?
     jhu_cs_apps = """
                 SELECT COUNT (*)
                 FROM applicants
@@ -86,6 +105,7 @@ def dashboard():
                 AND
                 degree = 'Masters';                
                 """
+    # How many entries from 2025 are acceptances from applicants who applied to Georgetown University for a PhD?
     georgetown_phd_cs_apps = """
                 SELECT COUNT(*)
                 FROM applicants
@@ -94,6 +114,7 @@ def dashboard():
                 AND status ILIKE '%accept%'
                 AND term ILIKE '%2025%';
                 """
+    # Ranked list of universities with highest acceptance rates for international vs. domestic applicants
     int_domestic_acceptance_rates = """
                 WITH acceptance_by_status AS (
                 SELECT 
@@ -123,6 +144,7 @@ def dashboard():
                 HAVING COUNT(DISTINCT us_or_international) = 2
                 ORDER BY rate_difference DESC;
                 """
+    # Average GPA of accepted students vs. rejected students by degree
     gpa_accepted_vs_rejected_degree = """
                 SELECT 
                 degree,
@@ -146,6 +168,7 @@ def dashboard():
                 END
             ORDER BY degree, admission_status;        
                 """
+    # Execute queries and fetch results
     try:
         fall_2025_apps_results = execute_query(fall_2025_apps)
         international_percentage_results = execute_query(international_percentage)
@@ -156,7 +179,7 @@ def dashboard():
         georgetown_phd_cs_apps_results = execute_query(georgetown_phd_cs_apps)
         int_domestic_acceptance_rates_results = execute_query(int_domestic_acceptance_rates)
         gpa_accepted_vs_rejected_degree_results = execute_query(gpa_accepted_vs_rejected_degree)
-
+            # Render results in the dashboard template
         return render_template('dashboard.html',
                                fall_2025_apps_count = fall_2025_apps_results[0][0],
                                international_percentage_pct = international_percentage_results[0][0],

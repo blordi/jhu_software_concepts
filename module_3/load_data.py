@@ -1,3 +1,7 @@
+"""
+Module to load data into a PostgreSQL database. Uses psycopg_pool for connecting to the database. Uses json for reading cleaned data.
+- Loads cleaned applicant data from 'llm_extend_applicant_data.json'.
+"""
 import psycopg_pool
 import json
 
@@ -16,7 +20,7 @@ def load_data(filename):
 
 def create_applicant_table():
     """
-    Create tables in the PostgreSQL database.
+    Create applicant table in the PostgreSQL database.
     """
     pool = psycopg_pool.ConnectionPool(
         "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
