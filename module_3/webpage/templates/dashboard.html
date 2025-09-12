@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graduate Admissions Dashboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        h2 {
+            color: #667eea;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-left: 5px solid #667eea;
+            padding-left: 15px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .averages-container {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 2px solid #e9ecef;
+        }
+        .averages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .avg-item {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .avg-metric {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .avg-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e3f2fd;
+            transition: background-color 0.3s ease;
+        }
+        .university-table {
+            margin-top: 20px;
+        }
+        .university-table th {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+            color: #666;
+            font-style: italic;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Graduate Admissions Analytics Dashboard</h1>
+        
+        <!-- Quick Stats Section -->
+        <div class="section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ fall_2025_apps_count }}</div>
+                    <div class="stat-label">Fall 2025 Applications</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ international_percentage_pct }}%</div>
+                    <div class="stat-label">International Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ fall_25_acceptange_percent_pct }}%</div>
+                    <div class="stat-label">Fall 2025 Acceptance Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ average_gpa_american_fall_25_avg }}</div>
+                    <div class="stat-label">Avg GPA (American Students, Fall 2025)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Specific Program Stats -->
+        <div class="section">
+            <h2>📊 Specific Program Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ jhu_cs_apps_count }}</div>
+                    <div class="stat-label">JHU Computer Science Masters Applications</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ georgetown_phd_cs_apps_count }}</div>
+                    <div class="stat-label">Georgetown PhD CS Acceptances (2025)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Academic Metrics -->
+        <div class="section">
+            <h2>📈 Average Academic Metrics</h2>
+            <div class="averages-container">
+                <div class="averages-grid">
+                    {% for metric_data in averages_avg %}
+                    <div class="avg-item">
+                        <div class="avg-metric">{{ metric_data[0] }}</div>
+                        <div class="avg-value">{{ metric_data[1] if metric_data[1] else 'N/A' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- GPA by Admission Status -->
+        <div class="section">
+            <h2>🎯 Average GPA by Admission Status and Degree Type</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Degree Type</th>
+                        <th>Admission Status</th>
+                        <th>Average GPA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in gpa_accepted_vs_rejected_degree_avg %}
+                    <tr>
+                        <td><strong>{{ row[0] }}</strong></td>
+                        <td>
+                            {% if row[1] == 'Accepted' %}
+                                <span style="color: #28a745; font-weight: bold;">✅ {{ row[1] }}</span>
+                            {% elif row[1] == 'Rejected' %}
+                                <span style="color: #dc3545; font-weight: bold;">❌ {{ row[1] }}</span>
+                            {% else %}
+                                <span style="color: #6c757d;">{{ row[1] }}</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ row[2] if row[2] else 'N/A' }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- International vs Domestic Acceptance Rates -->
+        {% if int_domestic_acceptance_rates_rank %}
+        <div class="section">
+            <h2>🌍 University Acceptance Rates: International vs Domestic</h2>
+            <table class="university-table">
+                <thead>
+                    <tr>
+                        <th>University</th>
+                        <th>US Acceptance Rate</th>
+                        <th>International Acceptance Rate</th>
+                        <th>Rate Difference</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in int_domestic_acceptance_rates_rank %}
+                    <tr>
+                        <td><strong>{{ row[0] }}</strong></td>
+                        <td>{{ row[1] if row[1] else 'N/A' }}%</td>
+                        <td>{{ row[2] if row[2] else 'N/A' }}%</td>
+                        <td>
+                            {% if row[3] %}
+                                {% if row[3] > 0 %}
+                                    <span style="color: #28a745; font-weight: bold;">+{{ row[3] }}%</span>
+                                {% else %}
+                                    <span style="color: #dc3545; font-weight: bold;">{{ row[3] }}%</span>
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <footer>
+            <p>📚 Graduate Admissions Data Analysis Dashboard</p>
+            <p>Data insights to help prospective graduate students make informed decisions</p>
+        </footer>
+    </div>
+</body>
+</html>

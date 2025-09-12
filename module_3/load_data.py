@@ -1,5 +1,3 @@
-# import psycopg
-import os
 import psycopg_pool
 import json
 

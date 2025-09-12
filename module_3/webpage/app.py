@@ -1,66 +1,65 @@
+from flask import Flask, render_template, request, url_for, redirect
 import psycopg_pool
 
+app = Flask(__name__)
 pool = psycopg_pool.ConnectionPool(
         "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
     )
 
-conn = pool.getconn()
-with conn.cursor() as cur:
+def execute_query(query):
+    with pool.connection() as conn:
+        cur = conn.cursor()
+        cur.execute(query)
+        results = cur.fetchall()
+        return results
 
-    cur.execute("""
-        SELECT COUNT (*) 
+@app.route('/')
+def dashboard():   
+    fall_2025_apps = """
+                SELECT COUNT (*) 
                 FROM applicants
-                WHERE TERM = 'Fall 2025';""")
-    print("How many entries do you have in your database who have applied for Fall 2025?\n", cur.fetchall(),"\n\n")
-
-    cur.execute("""
+                WHERE TERM = 'Fall 2025';
+                """
+    international_percentage = """
             SELECT
                 ROUND(
                     (SELECT COUNT(*) FROM applicants WHERE us_or_international = 'International') *100.0 /
                     (SELECT COUNT(*) FROM applicants), 
                     2
             ) AS international_percentage;
-                """)
-    print("What percentage of entries are from international students (not American or Other)\n", cur.fetchall(),"\n\n")
-
-    cur.execute("""
+                """
+    averages = """
             SELECT 
                 'GPA' AS metric,
-                COUNT(gpa) AS count_with_data,
-                ROUND(AVG(CAST(gpa AS NUMERIC)), 2) AS average_value
+                ROUND(AVG(gpa::NUMERIC), 2) AS average_value
             FROM applicants 
-            WHERE gpa IS NOT NULL AND gpa <= 5
+            WHERE gpa IS NOT NULL 
 
             UNION ALL
 
             SELECT 
                 'GRE' AS metric,
-                COUNT(gre) AS count_with_data,
-                ROUND(AVG(CAST(gre AS NUMERIC)), 2) AS average_value
+                ROUND(AVG(gre::NUMERIC), 2) AS average_value
             FROM applicants 
-            WHERE gre IS NOT NULL AND gre <= 170
+            WHERE gre IS NOT NULL 
 
             UNION ALL
 
             SELECT 
                 'GRE Verbal' AS metric,
-                COUNT(gre_v) AS count_with_data,
-                ROUND(AVG(CAST(gre_v AS NUMERIC)), 2) AS average_value
+                ROUND(AVG(gre_v::NUMERIC), 2) AS average_value
             FROM applicants 
-            WHERE gre_v IS NOT NULL AND gre_v <= 170
+            WHERE gre_v IS NOT NULL 
 
             UNION ALL
 
             SELECT 
                 'GRE Analytical Writing' AS metric,
-                COUNT(gre_aw) AS count_with_data,
-                ROUND(AVG(CAST(gre_aw AS NUMERIC)), 2) AS average_value
+                ROUND(AVG(gre_aw::NUMERIC), 2) AS average_value
             FROM applicants 
-            WHERE gre_aw IS NOT NULL AND gre_aw <= 6;
-                """)
-    print("What is the average GPA, GRE, GRE V, GRE AW of applicants who provide these metrics?\n", cur.fetchall(),"\n\n")
-
-    cur.execute("""
+            WHERE gre_aw IS NOT NULL;
+                """
+    average_gpa_american_fall_25 = """
                 SELECT 
                 ROUND(AVG(CAST(gpa AS NUMERIC)),2) AS average_value
                 FROM applicants
@@ -69,10 +68,8 @@ with conn.cursor() as cur:
                 term = 'Fall 2025'
                 AND
                 gpa <= 5;
-                """)
-    print("What is their average GPA of American students in Fall 2025?\n", cur.fetchall(),"\n\n")
-
-    cur.execute("""
+                """
+    fall_25_acceptange_percent = """
                 SELECT
                     ROUND(
                         (COUNT(CASE WHEN status ILIKE '%Accepted%' THEN 1 END) * 100.00) / COUNT(*),
@@ -80,24 +77,8 @@ with conn.cursor() as cur:
                     ) AS acceptance_percentage
                 FROM applicants
                 WHERE term = 'Fall 2025';
-                """)
-    print("What percent of entries for Fall 2025 are Acceptances (to two decimal places)?\n", cur.fetchall(),"\n\n")
-
-    cur.execute("""
-                SELECT
-                    ROUND(
-                        (AVG(CAST(gpa AS NUMERIC))),
-                        2
-                    ) AS average_gpa
-                FROM applicants
-                WHERE term = 'Fall 2025'
-                AND
-                status ILIKE '%accepted%'
-                AND gpa <= 5;
-                """)
-    print("What is the average GPA of applicants who applied for Fall 2025 who are Acceptances?\n", cur.fetchall(),"\n\n")
-
-    cur.execute("""
+                """
+    jhu_cs_apps = """
                 SELECT COUNT (*)
                 FROM applicants
                 WHERE
@@ -106,10 +87,8 @@ with conn.cursor() as cur:
                 llm_generated_university ILIKE '%Johns Hopkins University%'
                 AND
                 degree = 'Masters';                
-                """)
-    print("How many entries are from applicants who applied to JHU for a masters degrees in Computer Science?\n", cur.fetchall(),"\n\n")
-
-    cur.execute("""
+                """
+    georgetown_phd_cs_apps = """
                 SELECT COUNT (*)
                 FROM applicants
                 WHERE
@@ -122,10 +101,8 @@ with conn.cursor() as cur:
                 status ILIKE '%accept%'
                 AND
                 term ILIKE '%2025%';                
-                """)
-    print("How many entries from 2025 are acceptances from applicants who applied to Georgetown University for a PhD in Computer Science?\n", cur.fetchall(), "\n\n")
-
-    cur.execute("""
+                """
+    int_domestic_acceptance_rates = """
                 WITH acceptance_by_status AS (
                 SELECT 
                     llm_generated_university,
@@ -145,18 +122,16 @@ with conn.cursor() as cur:
                  )
                 SELECT 
                     llm_generated_university,
-                    MAX(CASE WHEN us_or_international = 'US' THEN acceptance_rate END) as us_acceptance_rate,
+                    MAX(CASE WHEN us_or_international = 'American' THEN acceptance_rate END) as us_acceptance_rate,
                     MAX(CASE WHEN us_or_international = 'International' THEN acceptance_rate END) as intl_acceptance_rate,
                     (MAX(CASE WHEN us_or_international = 'International' THEN acceptance_rate END) - 
-                    MAX(CASE WHEN us_or_international = 'US' THEN acceptance_rate END)) as rate_difference
+                    MAX(CASE WHEN us_or_international = 'American' THEN acceptance_rate END)) as rate_difference
                 FROM acceptance_by_status
                 GROUP BY llm_generated_university
                 HAVING COUNT(DISTINCT us_or_international) = 2
                 ORDER BY rate_difference DESC;
-                """)
-    print("Which universities have the highest acceptance rates for interational students? How about domestic?\n", cur.fetchall(), "\n\n")
-    
-    cur.execute("""
+                """
+    gpa_accepted_vs_rejected_degree = """
                 SELECT 
                 degree,
                 CASE 
@@ -164,7 +139,6 @@ with conn.cursor() as cur:
                     WHEN status ILIKE '%rejected%' THEN 'Rejected'
                     ELSE 'Other'
                 END as admission_status,
-                COUNT(*) as count,
                 ROUND(AVG(CAST(gpa AS NUMERIC)), 2) as average_gpa
             FROM applicants 
             WHERE gpa IS NOT NULL 
@@ -179,5 +153,33 @@ with conn.cursor() as cur:
                     ELSE 'Other'
                 END
             ORDER BY degree, admission_status;        
-                """)
-    print("What is the average GPA of accepted students vs. rejected students by degree?\n", cur.fetchall(),"\n\n")
+                """
+    try:
+        fall_2025_apps_results = execute_query(fall_2025_apps)
+        international_percentage_results = execute_query(international_percentage)
+        averages_results = execute_query(averages)
+        average_gpa_american_fall_25_results = execute_query(average_gpa_american_fall_25)
+        fall_25_acceptange_percent_results = execute_query(fall_25_acceptange_percent)
+        jhu_cs_apps_results = execute_query(jhu_cs_apps)
+        georgetown_phd_cs_apps_results = execute_query(georgetown_phd_cs_apps)
+        int_domestic_acceptance_rates_results = execute_query(int_domestic_acceptance_rates)
+        gpa_accepted_vs_rejected_degree_results = execute_query(gpa_accepted_vs_rejected_degree)
+
+        return render_template('dashboard.html',
+                               fall_2025_apps_count = fall_2025_apps_results[0][0],
+                               international_percentage_pct = international_percentage_results[0][0],
+                               averages_avg = averages_results,
+                               average_gpa_american_fall_25_avg = average_gpa_american_fall_25_results[0][0],
+                               fall_25_acceptange_percent_pct = fall_25_acceptange_percent_results[0][0],
+                               jhu_cs_apps_count = jhu_cs_apps_results[0][0],
+                               georgetown_phd_cs_apps_count = georgetown_phd_cs_apps_results[0][0],
+                               int_domestic_acceptance_rates_rank = int_domestic_acceptance_rates_results,
+                               gpa_accepted_vs_rejected_degree_avg = gpa_accepted_vs_rejected_degree_results
+                               )
+    except Exception as e:
+        return f"Error executing queries: {str(e)}"
+    
+if __name__ == '__main__':
+    app.run(debug=True)
+    
+
