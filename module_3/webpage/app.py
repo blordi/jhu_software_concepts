@@ -12,18 +12,28 @@ pool = psycopg_pool.ConnectionPool(
     )
 
 def execute_query(query):
-        """
-        Execute a SQL query and return the results.
-        Args:
-            query (str): The SQL query to execute.
-        Returns:
-            list: List of tuples containing the query results.
-        """
+    """
+    Execute a SQL query and return the results.
+    Args:
+        query (str): The SQL query to execute.
+    Returns:
+        list: List of tuples containing the query results.
+    """
     with pool.connection() as conn:
         cur = conn.cursor()
         cur.execute(query)
         results = cur.fetchall()
         return results
+def rescrape():
+    import scrape
+    import clean
+    scrape.main()
+    clean.main()
+
+def add_to_db():
+    import load_data
+    cleaned_data = 'jhu_software_concepts/module_3/update_cleaned_applicant_data.json'
+    load_data.add_applicant_data({'rows': cleaned_data})
 
 @app.route('/')
 def dashboard():
@@ -87,7 +97,7 @@ def dashboard():
                 gpa <= 5;
                 """
     # What percentage of Fall 2025 applicants were accepted
-    all_25_acceptange_percent = """
+    fall_25_acceptance_percent = """
                 SELECT
                     ROUND(
                         (COUNT(CASE WHEN status ILIKE '%Accepted%' THEN 1 END) * 100.00) / COUNT(*),
@@ -97,7 +107,7 @@ def dashboard():
                 WHERE term = 'Fall 2025';
                 """
     # How many entries are from applicants who applied to JHU for a masters degrees?
-    jhu_cs_apps = """
+    jhu_apps = """
                 SELECT COUNT (*)
                 FROM applicants
                 WHERE
@@ -106,7 +116,7 @@ def dashboard():
                 degree = 'Masters';                
                 """
     # How many entries from 2025 are acceptances from applicants who applied to Georgetown University for a PhD?
-    georgetown_phd_cs_apps = """
+    georgetown_phd_apps = """
                 SELECT COUNT(*)
                 FROM applicants
                 WHERE llm_generated_university ILIKE '%Georgetown%'
@@ -174,9 +184,9 @@ def dashboard():
         international_percentage_results = execute_query(international_percentage)
         averages_results = execute_query(averages)
         average_gpa_american_fall_25_results = execute_query(average_gpa_american_fall_25)
-        fall_25_acceptange_percent_results = execute_query(fall_25_acceptange_percent)
-        jhu_cs_apps_results = execute_query(jhu_cs_apps)
-        georgetown_phd_cs_apps_results = execute_query(georgetown_phd_cs_apps)
+        fall_25_acceptance_percent_results = execute_query(fall_25_acceptance_percent)
+        jhu_apps_results = execute_query(jhu_apps)
+        georgetown_phd_apps_results = execute_query(georgetown_phd_apps)
         int_domestic_acceptance_rates_results = execute_query(int_domestic_acceptance_rates)
         gpa_accepted_vs_rejected_degree_results = execute_query(gpa_accepted_vs_rejected_degree)
             # Render results in the dashboard template
@@ -185,15 +195,28 @@ def dashboard():
                                international_percentage_pct = international_percentage_results[0][0],
                                averages_avg = averages_results,
                                average_gpa_american_fall_25_avg = average_gpa_american_fall_25_results[0][0],
-                               fall_25_acceptange_percent_pct = fall_25_acceptange_percent_results[0][0],
-                               jhu_cs_apps_count = jhu_cs_apps_results[0][0],
-                               georgetown_phd_cs_apps_count = georgetown_phd_cs_apps_results[0][0],
+                               fall_25_acceptange_percent_pct = fall_25_acceptance_percent_results[0][0],
+                               jhu_cs_apps_count = jhu_apps_results[0][0],
+                               georgetown_phd_cs_apps_count = georgetown_phd_apps_results[0][0],
                                int_domestic_acceptance_rates_rank = int_domestic_acceptance_rates_results,
                                gpa_accepted_vs_rejected_degree_avg = gpa_accepted_vs_rejected_degree_results
                                )
     except Exception as e:
         return f"Error executing queries: {str(e)}"
-    
+
+@app.route('/rescrape', methods=['POST'])    
+def rescrape():
+    try:
+        rescrape()
+        add_to_db()
+    except Exception as e:
+        print(f"Error occurred while rescraping: {e}")
+    return redirect(url_for('dashboard'))
+
+@app.route('/refresh', methods=['POST'])
+def refresh_dashboard():
+    return redirect(url_for('dashboard'))
+
 if __name__ == '__main__':
     app.run(debug=True)
     

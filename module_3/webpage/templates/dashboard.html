@@ -5,6 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Graduate Admissions Dashboard</title>
     <style>
+        /* Refresh Button Styles */
+        .refresh-btn {
+            background: linear-gradient(135deg, #10B981 0%, #047857 100%); /* Green gradient */
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+        /* Rescrape Button Styles */
+        .rescrape-btn {
+            background: linear-gradient(135deg, #3B82F6 0%, #1E3A8A 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .rescrape-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        }
+
+        .rescrape-btn:active {
+            transform: translateY(0);
+        }
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -146,7 +194,25 @@
 <body>
     <div class="container">
         <h1>🎓 Graduate Admissions Analytics Dashboard</h1>
-        
+        <!-- BUTTON SECTION-->
+        <div class="section">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <!-- Rescrape Button -->
+                <form method="POST" action="{{ url_for('rescrape') }}" style="display: inline; margin-right: 15px;">
+                    <button type="submit" class="rescrape-btn" onclick="return confirm('Are you sure you want to rescrape the data? This may take several minutes.')">
+                        Pull Data
+                    </button>
+                </form>
+                
+                <!--Refresh Button -->
+                <form method="POST" action="{{ url_for('refresh_dashboard') }}" style="display: inline;">
+                    <button type="submit" class="refresh-btn">
+                        Update Analysis
+                    </button>
+                </form>
+            </div>
+        </div>
+                
         <!-- Quick Stats Section -->
         <div class="section">
             <div class="stats-grid">
