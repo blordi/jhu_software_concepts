@@ -218,6 +218,16 @@ def refresh_dashboard():
     return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080,debug=True, )
+
+    import atexit
+    atexit.register(lambda: pool.close())
+    
+    try:
+        app.run(debug=True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        pool.close()   
     
 
