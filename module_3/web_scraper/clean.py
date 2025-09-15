@@ -187,10 +187,9 @@ def main():
     Takes in a raw data set and outputs two cleaned data sets, update_applicant_data.json, and update_llm_extend_applicant_data.json
     """
     scraped_data = load_data('jhu_software_concepts/module_3/web_scraper/update_raw_applicant_data.json')
-    limited_data = scraped_data[:100]
     application_data = []
 
-    for entry in limited_data:
+    for entry in scraped_data:
         application = clean_html(entry['html'])
         if application:
                 application_data.extend(application)
