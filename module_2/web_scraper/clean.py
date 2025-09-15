@@ -38,16 +38,18 @@ def clean_html(html):
     Args:
         html (str): Raw HTML content of a survey page.
     Returns:
-        dict: Dictionary of extracted applicant data fields, or None if not found.
+        list: List of extracted applicant data fields, or None if not found.
     """
     soup = BeautifulSoup(html, "html.parser")
-    
     rows = soup.find_all('tr') # Find all table rows 
+    extracted_data = []
 
-    for i in range(len(rows)): # Iterate through each row and extract TD elements
+    i = 0
+    while i < len(rows):    
         tr = rows[i]
         tds = tr.find_all('td')
         if not tds or len(tds) < 5: # Ensure there are enough TDs to extract data
+            i += 1
             continue
         
         # Extract University name using BeautifulSoup string methods
@@ -68,12 +70,10 @@ def clean_html(html):
 
         # Extract Applicant URL
         link_tag = tds[4].find('a', href=lambda x: x and "/result/" in x)
-        applicant_url = "https://www.thegradcafe.com"+link_tag['href'] if link_tag else None #Return None if link_tag not found
-
-        # Extract Application Number from href
-        app_number_tag = tds[4].find('a', href=lambda x: x in x)
-        app_number = app_number_tag['href'] if app_number_tag else None #Return None if app_number_tag not found
-        app_number = app_number.replace("/result/", "") #remove prefix to get just the number
+        if link_tag:
+            applicant_url = "https://www.thegradcafe.com" + link_tag['href']
+        else:
+            applicant_url = None
 
         # Extract Applicant Status using regex
         status_match = re.search(
@@ -81,7 +81,7 @@ def clean_html(html):
         )
         applicant_status = status_match.group(1) if status_match else None #Return None if status not found
 
-        semester = nationality = gre = gre_v = gre_aw = gpa = None #Initialize optional fields to None
+        semester = nationality = gre = gre_v = gre_aw = gpa = comment = None #Initialize optional fields to None
 
         # Extract additional details from the next row if it exists
         if i+1 < len(rows):
@@ -131,7 +131,7 @@ def clean_html(html):
         else:
             combined_program = None
 
-        return {
+        entry = {
             "program": combined_program,
             "comments": comment,
             "date_added": added_on,
@@ -145,6 +145,10 @@ def clean_html(html):
             "gpa": gpa,
             "gre_aw": gre_aw
         }
+        extracted_data.append(entry)
+        i += 2 #Skip the next row since it's already processed
+    return extracted_data
+
 
 
 scraped_data = load_data('jhu_software_concepts/module_2/web_scraper/raw_applicant_data.json')
