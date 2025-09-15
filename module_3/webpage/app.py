@@ -5,6 +5,19 @@ Executes various SQL queries to analyze applicant data and displays the results 
 
 from flask import Flask, render_template, request, url_for, redirect
 import psycopg_pool
+import sys
+import os
+import json
+
+current_dir = os.path.dirname(os.path.abspath(__file__))  # webpage directory
+module_3_dir = os.path.dirname(current_dir)              # module_3 directory
+web_scraper_dir = os.path.join(module_3_dir, 'web_scraper')  # web_scraper directory
+
+sys.path.extend([module_3_dir, web_scraper_dir])
+
+import clean
+import scrape
+import load_data
 
 app = Flask(__name__)
 pool = psycopg_pool.ConnectionPool(
@@ -24,16 +37,35 @@ def execute_query(query):
         cur.execute(query)
         results = cur.fetchall()
         return results
-def rescrape():
-    import scrape
-    import clean
+def run_rescrape():
     scrape.main()
     clean.main()
 
+# def add_to_db():
+#     cleaned_data_path= r"jhu_software_concepts\module_3\update_llm_extend_applicant_data.json"
+#     with open(cleaned_data_path, 'r', encoding='utf-8') as f:
+#         cleaned_data = json.load(f)
+#     load_data.add_applicant_data({'rows': cleaned_data})
 def add_to_db():
-    import load_data
-    cleaned_data = 'jhu_software_concepts/module_3/update_cleaned_applicant_data.json'
-    load_data.add_applicant_data({'rows': cleaned_data})
+    import json
+    import os
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    module_3_dir = os.path.dirname(current_dir)
+    cleaned_data_path = os.path.join(module_3_dir, 'update_llm_extend_applicant_data.json')
+    
+    try:
+        with open(cleaned_data_path, 'r') as f:
+            cleaned_data = json.load(f)
+        
+        # Pass the entire dict (not just the list) since load_data expects data['rows']
+        load_data.add_applicant_data(cleaned_data)
+        print("✅ Data successfully added to database")
+        
+    except Exception as e:
+        print(f"❌ Error in add_to_db: {e}")
+        raise
+
 
 @app.route('/')
 def dashboard():
@@ -207,7 +239,7 @@ def dashboard():
 @app.route('/rescrape', methods=['POST'])    
 def rescrape():
     try:
-        rescrape()
+        run_rescrape()
         add_to_db()
     except Exception as e:
         print(f"Error occurred while rescraping: {e}")
