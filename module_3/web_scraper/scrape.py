@@ -2,14 +2,19 @@
 """
 Scrapes HTML pages from The GradCafe survey results and saves each page's HTML to a JSON file.
 
-- Iterates over all survey pages (0 to 9057).
-- For each page, fetches the HTML and stores it in a list with its page number.
+- Checks if page has entries that already exist in Database.
+- For each new page, fetches the HTML and stores it in a list with its page number.
 - Saves the list of page HTMLs to 'raw_applicant_data.json' for later cleaning.
 """
 import urllib3
 from bs4 import BeautifulSoup   
 import json
 import psycopg_pool
+db_pool = psycopg_pool.ConnectionPool(
+    "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
+)
+
+http = urllib3.PoolManager()
 
 def save_data(data, filename='raw_applicant_data.json'):
      """
@@ -35,24 +40,45 @@ def scrape_data(url):
     return soup.prettify()
 
 def get_existing_ids():
-    pool = psycopg_pool.ConnectionPool(
-        "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
-    )
-    with pool.connection() as conn:
-        cur = conn.cursor()
-        cur.execute("""
-                    SELECT id FROM applicants;SELECT DISTINCT 
-                    CAST(
-                        SUBSTRING(url FROM '/result/([0-9]+)') AS INTEGER
-                    ) as result_id
-                FROM applicants 
-                WHERE url LIKE '%/result/%'
-                    """)
-        results = cur.fetchall()
-        return set(row[0] for row in results)
+    """
+    Queries database and gets existing ids from the url field.  returns a set of the existing ids
+    Args:
+        None
+    Returns:
+        A set of existing ids, or an empty set
+    """
+    try:
+
+        with db_pool.connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                        SELECT DISTINCT 
+                        CAST(
+                            SUBSTRING(url FROM '/result/([0-9]+)') AS INTEGER
+                        ) as result_id
+                    FROM applicants 
+                    WHERE url LIKE '%/result/%'
+                        """)
+            results = cur.fetchall()
+            existing_ids = set(row[0] for row in results)
+            return existing_ids
+    except Exception as e:
+        print(f"Error getting existing IDs: {e}")
+        print("Continuing with empty set - may scrape duplicate data")
+        return set()
 
 def new_results(page_number, existing_ids):
-    http = urllib3.PoolManager()
+    """
+    Scrapes new results from a page. 
+    Args:
+        Page number to scrape
+        Existing ids in database
+    Returns:
+        has_new if there are new results on the page
+        the number of page result ids
+        the number of new ids
+        the html content if there are new results
+    """
     url = f"https://www.thegradcafe.com/survey/?page={page_number}"
     page = http.request('GET', url)
     soup = BeautifulSoup(page.data, 'html.parser')
@@ -70,9 +96,20 @@ def new_results(page_number, existing_ids):
                 continue
 
     new_ids = page_result_ids - existing_ids
-    return len(new_ids) > 0, len(page_result_ids), len(new_ids)
+    has_new = len(new_ids) > 0
+
+    html_content = soup.prettify() if has_new else None 
+
+    return has_new, len(page_result_ids), len(new_ids), html_content
 
 def main():
+    """
+    Scrapes thegradcafe.com and only returns new results. Stops if there are 5 pages without new results in a row.
+    Args:
+        None
+    Returns: 
+        Saves data to a file update_raw_applicant_data.json
+    """
     html_list = []
 
     existing_ids = get_existing_ids()
@@ -82,15 +119,19 @@ def main():
     max_empty_pages = 5  # Stop after 5 consecutive empty pages
 
     while empty_page_count < max_empty_pages:
+        print(f"Checking page {page_number}...")
 
-        has_new, total_ids, new_ids = new_results(page_number, existing_ids)
+        has_new, total_ids, new_ids, html_content = new_results(page_number, existing_ids)
+        
         if has_new:
-            url = f"https://www.thegradcafe.com/survey/?page={page_number}"
-            html_content = scrape_data(url)
+            print(f"Page {page_number}: {new_ids} new results out of {total_ids} total")
             html_list.append({"page": page_number, "html": html_content})
-            consecutive_empty_pages = 0
+            empty_page_count = 0  # Reset counter if new data is found
         else:
+            print(f"Page {page_number}: No new results")
             empty_page_count += 1
+
+        page_number +=1
     if html_list:
         save_data(html_list, 'jhu_software_concepts/module_3/web_scraper/update_raw_applicant_data.json')
     else:
