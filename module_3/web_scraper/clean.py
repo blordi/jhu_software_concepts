@@ -153,34 +153,68 @@ def clean_html(html):
         i += 2 #Skip the next row since it's already processed
     return extracted_data
 
-def llm_clean_curl_command():
+def llm_clean_command():
     """
-    Changes directory to llm_hosting and creates a server for api calls.  Then executes a curl command to run an LLM to clean data. Final output is a file named update_llm_extend_applicant_data.json
-    Args:
-        None
-    Returns:
-        None
+    Process applicant data using LLM CLI mode to enhance and standardize the data.
     """
-    python_command =  '(cd "jhu_software_concepts\module_3\web_scraper\llm_hosting" && python app.py --serve)'
+    import subprocess
+    import os
+    import json
+    
+    # Setup paths
     current_dir = os.getcwd()
-    input_file = os.path.join(current_dir, "jhu_software_concepts/module_3/update_applicant_data.json")
-    output_file = os.path.join(current_dir, "jhu_software_concepts/module_3/update_llm_extend_applicant_data.json")
+    llm_dir = os.path.join(current_dir, "jhu_software_concepts", "module_3", "web_scraper", "llm_hosting")
+    input_file = os.path.join(current_dir, "jhu_software_concepts", "module_3", "update_applicant_data.json")
+    output_file = os.path.join(current_dir, "jhu_software_concepts", "module_3", "update_llm_extend_applicant_data.json")
     
-    curl_command = f'curl -s -X POST http://localhost:8000/standardize -H "Content-Type: application/json" -d @"{input_file}" | jq . > "{output_file}"'
-       
-    server_process = subprocess.Popen(python_command, shell=True)
-    time.sleep(10)  # Wait for the server to start
-    result = subprocess.run(
-            curl_command, 
-            shell=True, 
-            cwd=current_dir,
-            env=os.environ.copy(),
+    # Build CLI command
+    cli_command = [
+        'python', 
+        'app.py', 
+        '--file', 
+        input_file,
+        '--stdout'
+    ]
+    
+    try:
+        # Run the CLI command
+        result = subprocess.run(
+            cli_command,
+            cwd=llm_dir,
+            capture_output=True,
             text=True,
-            capture_output=False  # Don't capture since we're redirecting to file
+            timeout=600
         )
-    print(f"Curl return code: {result.returncode}")
-    
-    server_process.terminate()
+        
+        if result.returncode == 0:
+            # Parse and save output
+            try:
+                output_data = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                # Handle JSONL format
+                lines = result.stdout.strip().split('\n')
+                records = []
+                for line in lines:
+                    if line.strip():
+                        try:
+                            records.append(json.loads(line))
+                        except json.JSONDecodeError:
+                            continue
+                output_data = {"rows": records}
+            
+            # Save to output file
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(output_data, f, indent=2)
+            
+            print("LLM processing completed successfully")
+            return True
+        else:
+            print(f"LLM processing failed: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"LLM processing error: {e}")
+        return False
 
 def main():
     """
@@ -195,7 +229,7 @@ def main():
                 application_data.extend(application)
 
     save_data(application_data, 'jhu_software_concepts/module_3/update_applicant_data.json')
-    llm_clean_curl_command()
+    llm_clean_command()
 
 
 if __name__ == "__main__":

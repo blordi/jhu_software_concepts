@@ -5,19 +5,33 @@ Module to load data into a PostgreSQL database. Uses psycopg_pool for connecting
 import psycopg_pool
 import json
 
-
-
 def load_data(filename):
     """
-    Load data from a JSON file.
-    Args:
-        filename (str): Input file path for JSON data.
-    Returns:
-        list: List of dictionaries containing raw HTML data.
+    Load data from a JSON file with fallback handling for problematic files.
     """
-    with open(filename, 'r', encoding = 'utf-8') as f:
-        return json.load(f)
-
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        # Handle JSONL format (one JSON per line)
+        records = []
+        with open(filename, 'r', encoding='utf-8', errors='replace') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        records.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+        return {"rows": records}
+    except UnicodeDecodeError:
+        # Handle encoding issues
+        with open(filename, 'r', encoding='latin1') as f:
+            content = f.read()
+        # Clean problematic characters and try again
+        cleaned_content = content.encode('utf-8', errors='ignore').decode('utf-8')
+        return json.loads(cleaned_content)
+    
 def create_applicant_table():
     """
     Create applicant table in the PostgreSQL database.
@@ -56,6 +70,34 @@ def create_applicant_table():
     pool.close()
     
 
+def  add_applicant_data_master_copy(data):
+    """
+    Add applicant data to the PostgreSQL database.
+    Args:
+        data (list): List of dictionaries containing cleaned applicant data.
+    """
+    pool = psycopg_pool.ConnectionPool(
+        "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
+    )
+
+    with pool.getconn() as conn:
+        with conn.cursor() as cur:
+            for entry in data['rows']:
+                cur.execute("""
+                    INSERT INTO applicants(
+                        program, comments, date_added, url, status, term,
+                        us_or_international, gpa, gre, gre_v, gre_aw, degree,
+                        llm_generated_program, llm_generated_university
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                    entry['program'], entry['comments'], entry['date_added'],
+                    entry['url'], entry['status'], entry['semester'], entry['applicant_type'],
+                    entry['gpa'], entry['gre_total'], entry['gre_verbal'], entry['gre_aw'], entry['degree'],
+                    entry['llm-generated-program'], entry['llm-generated-university']
+                ))
+            conn.commit()
+    pool.close()
+
 def  add_applicant_data(data):
     """
     Add applicant data to the PostgreSQL database.
@@ -84,6 +126,22 @@ def  add_applicant_data(data):
             conn.commit()
     pool.close()
 
-data = load_data('jhu_software_concepts/module_2/llm_extend_applicant_data.json')
-create_applicant_table()
-add_applicant_data(data)
+def drop_table():
+    """Drop the applicants table."""
+    pool = psycopg_pool.ConnectionPool(
+        "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
+    )
+    
+    try:
+        with pool.getconn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DROP TABLE IF EXISTS applicants;")
+                conn.commit()
+    finally:
+        pool.close()
+
+if __name__ == "__main__":
+    data = load_data('jhu_software_concepts/module_3/llm_extend_applicant_data_master_copy.json')
+    # drop_table()
+    # create_applicant_table()
+    # add_applicant_data_master_copy(data)

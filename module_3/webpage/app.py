@@ -2,19 +2,18 @@
 A Flask web application that connects to a PostgreSQL database using connection pooling.
 Executes various SQL queries to analyze applicant data and displays the results on a dashboard.
 """
-
-from flask import Flask, render_template, request, url_for, redirect
-import psycopg_pool
 import sys
 import os
-import json
+from flask import Flask, render_template, request, url_for, redirect
 
 current_dir = os.path.dirname(os.path.abspath(__file__))  # webpage directory
 module_3_dir = os.path.dirname(current_dir)              # module_3 directory
 web_scraper_dir = os.path.join(module_3_dir, 'web_scraper')  # web_scraper directory
 
 sys.path.extend([module_3_dir, web_scraper_dir])
+import psycopg_pool
 
+import json
 import clean
 import scrape
 import load_data
@@ -41,12 +40,10 @@ def run_rescrape():
     scrape.main()
     clean.main()
 
-# def add_to_db():
-#     cleaned_data_path= r"jhu_software_concepts\module_3\update_llm_extend_applicant_data.json"
-#     with open(cleaned_data_path, 'r', encoding='utf-8') as f:
-#         cleaned_data = json.load(f)
-#     load_data.add_applicant_data({'rows': cleaned_data})
 def add_to_db():
+    """
+    Load LLM-processed applicant data from JSON file and insert into PostgreSQL database.
+    """
     import json
     import os
     
@@ -55,15 +52,14 @@ def add_to_db():
     cleaned_data_path = os.path.join(module_3_dir, 'update_llm_extend_applicant_data.json')
     
     try:
-        with open(cleaned_data_path, 'r') as f:
+        with open(cleaned_data_path, 'r', encoding='utf-8') as f:
             cleaned_data = json.load(f)
         
-        # Pass the entire dict (not just the list) since load_data expects data['rows']
         load_data.add_applicant_data(cleaned_data)
-        print("✅ Data successfully added to database")
+        print("Data successfully added to database")
         
     except Exception as e:
-        print(f"❌ Error in add_to_db: {e}")
+        print(f"Error in add_to_db: {e}")
         raise
 
 
