@@ -13,7 +13,7 @@ clean.py utilizes beautifulsoup, regex, and a locally hosted llm to clean the da
 
 ## Acknowledgements
 
-The llm_hosting file came directly from Liv d'Aliberti and I did not modify it.  Some of the Regex searches were written by Claude 4 Opus.  Claude 4 Opus also helped write the html and css code as well as debug some of the SQL queries. 
+The llm_hosting file came directly from Liv d'Aliberti and I did not modify it.  Some of the Regex searches were written by Claude 4 Opus.  Claude 4 Opus also helped write the html and css code as well as debug some of the SQL queries. I also relied on Claude 4 Opus to help with debuging code and fixing server issues. 
 
 ## Known Bugs
 
