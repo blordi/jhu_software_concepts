@@ -217,19 +217,19 @@
         <div class="section">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-number">{{ fall_2025_apps_count }}</div>
+                    <div class="stat-number">Answer: {{ fall_2025_apps_count }}</div>
                     <div class="stat-label">Fall 2025 Applications</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{{ international_percentage_pct }}%</div>
+                    <div class="stat-number">Answer: {{ international_percentage_pct|round(2) }}%</div>
                     <div class="stat-label">International Students</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{{ fall_25_acceptange_percent_pct }}%</div>
+                    <div class="stat-number">Answer: {{ fall_25_acceptange_percent_pct|round(2) }}%</div>
                     <div class="stat-label">Fall 2025 Acceptance Rate</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{{ average_gpa_american_fall_25_avg }}</div>
+                    <div class="stat-number">Answer: {{ average_gpa_american_fall_25_avg }}</div>
                     <div class="stat-label">Avg GPA (American Students, Fall 2025)</div>
                 </div>
             </div>
@@ -240,11 +240,11 @@
             <h2>📊 Specific Program Statistics</h2>
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-number">{{ jhu_cs_apps_count }}</div>
+                    <div class="stat-number">Answer: {{ jhu_cs_apps_count }}</div>
                     <div class="stat-label">JHU Masters Applications</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">{{ georgetown_phd_cs_apps_count }}</div>
+                    <div class="stat-number">Answer: {{ georgetown_phd_cs_apps_count }}</div>
                     <div class="stat-label">Georgetown PhD Acceptances (2025)</div>
                 </div>
             </div>
@@ -257,8 +257,8 @@
                 <div class="averages-grid">
                     {% for metric_data in averages_avg %}
                     <div class="avg-item">
-                        <div class="avg-metric">{{ metric_data[0] }}</div>
-                        <div class="avg-value">{{ metric_data[1] if metric_data[1] else 'N/A' }}</div>
+                        <div class="avg-metric">Answer: {{ metric_data[0] }}</div>
+                        <div class="avg-value">Answer: {{ metric_data[1] if metric_data[1] else 'N/A' }}</div>
                     </div>
                     {% endfor %}
                 </div>

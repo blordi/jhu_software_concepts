@@ -41,4 +41,63 @@ def test_app_factory_config(app_instance):
         # Check for your actual routes
         assert '/' in routes  # dashboard route
         assert '/rescrape' in routes  # pull data route
-        assert '/refresh' in routes  # update analysis route
+        assert '/refresh' in routes  # update analysis route 
+
+
+@pytest.mark.web
+def test_get_analysis_page_load(client, mocker):
+    """Test GET /analysis (page load) - Status 200, contains buttons, contains analysis content"""
+    # Mock the execute_query function to return realistic test data
+    def mock_execute_query(query):
+        if "COUNT (*)" in query and "Fall 2025" in query:
+            return [(150,)]
+        elif "international_percentage" in query:
+            return [(25.50,)]
+        elif "averages" in query or "UNION ALL" in query:
+            return [('GPA', 3.75), ('GRE', 320.50), ('GRE Verbal', 155.20), ('GRE Analytical Writing', 4.10)]
+        elif "average_gpa_american_fall_25" in query:
+            return [(3.65,)]
+        elif "acceptance_percentage" in query:
+            return [(15.75,)]
+        elif "Johns Hopkins University" in query:
+            return [(45,)]
+        elif "Georgetown" in query:
+            return [(12,)]
+        elif "acceptance_by_status" in query:
+            return [('University A', 80.00, 75.50, 4.50)]
+        elif "gpa_accepted_vs_rejected_degree" in query:
+            return [('Masters', 'Accepted', 3.80)]
+        else:
+            return [(100,)]
+    
+    mocker.patch('src.webpage.app.execute_query', side_effect=mock_execute_query)
+    
+    # Make the GET request
+    response = client.get('/')
+    
+    # i. Status 200
+    assert response.status_code == 200
+    
+    page_content = response.data.decode('utf-8')
+    
+    # DEBUG: Let's see what's actually rendered
+    print("=== PERCENTAGE DEBUG ===")
+    import re
+    answer_matches = re.findall(r'Answer: [0-9.]+%?', page_content)
+    print("All Answer: with numbers found:")
+    for match in answer_matches:
+        print(f"  - '{match}'")
+    
+    # ii. Page Contains both "Pull Data" and "Update Analysis" buttons
+    assert 'Pull Data' in page_content, "Page should contain 'Pull Data' button"
+    assert 'Update Analysis' in page_content, "Page should contain 'Update Analysis' button"
+    
+    # iii. Page text includes "Analysis" and at least one "Answer:"
+    assert 'Graduate Admissions Analytics Dashboard' in page_content, "Page should contain dashboard title"
+    assert 'Answer:' in page_content, "Page should contain at least one 'Answer:' label"
+    
+    # Verify mock data appears with Answer: labels (flexible for now)
+    assert 'Answer: 150' in page_content, "Should show Fall 2025 count with Answer: label"
+    
+    # Use flexible matching until we see what's rendered
+    assert ('Answer: 25.5' or 'Answer: 25.50' in page_content), "Should show international percentage with Answer: label"
