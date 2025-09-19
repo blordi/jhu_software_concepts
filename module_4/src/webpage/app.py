@@ -225,10 +225,10 @@ def dashboard():
             # Render results in the dashboard template
         return render_template('dashboard.html',
                                fall_2025_apps_count = fall_2025_apps_results[0][0],
-                               international_percentage_pct = international_percentage_results[0][0],
+                               international_percentage_pct = f"{international_percentage_results[0][0]:.2f}",
                                averages_avg = averages_results,
                                average_gpa_american_fall_25_avg = average_gpa_american_fall_25_results[0][0],
-                               fall_25_acceptange_percent_pct = fall_25_acceptance_percent_results[0][0],
+                               fall_25_acceptange_percent_pct = f"{fall_25_acceptance_percent_results[0][0]:.2f}",
                                jhu_cs_apps_count = jhu_apps_results[0][0],
                                georgetown_phd_cs_apps_count = georgetown_phd_apps_results[0][0],
                                int_domestic_acceptance_rates_rank = int_domestic_acceptance_rates_results,
