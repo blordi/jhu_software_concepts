@@ -52,9 +52,10 @@ import urllib3
 from bs4 import BeautifulSoup   
 import json
 import psycopg_pool
-db_pool = psycopg_pool.ConnectionPool(
-    "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
-)
+import os
+
+DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres@localhost:5432/module_3_db")
+db_pool = psycopg_pool.ConnectionPool(DATABASE_URL)
 
 http = urllib3.PoolManager()
 

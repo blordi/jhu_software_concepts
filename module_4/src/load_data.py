@@ -15,6 +15,7 @@ and includes robust error handling for various file formats and encoding issues.
 
 import psycopg_pool
 import json
+import os
 
 def load_data(filename):
     """
@@ -99,9 +100,8 @@ def create_applicant_table():
         - llm_generated_program: TEXT - LLM-processed program name
         - llm_generated_university: TEXT - LLM-processed university name
     """
-    pool = psycopg_pool.ConnectionPool(
-        "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
-    )
+    DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres@localhost:5432/module_3_db")
+    pool = psycopg_pool.ConnectionPool(DATABASE_URL)
 
     with pool.getconn() as conn:
         with conn.cursor() as cur:
@@ -160,9 +160,8 @@ def  add_applicant_data_master_copy(data):
         >>> add_applicant_data_master_copy(data)
     """
     
-    pool = psycopg_pool.ConnectionPool(
-        "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
-    )
+    DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres@localhost:5432/module_3_db")
+    pool = psycopg_pool.ConnectionPool(DATABASE_URL)
 
     with pool.getconn() as conn:
         with conn.cursor() as cur:
@@ -208,9 +207,8 @@ def  add_applicant_data(data):
         >>> data = {"rows": [{"program": "CS", "Term": "Fall 2025", ...}]}
         >>> add_applicant_data(data)
     """
-    pool = psycopg_pool.ConnectionPool(
-        "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
-    )
+    DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres@localhost:5432/module_3_db")
+    pool = psycopg_pool.ConnectionPool(DATABASE_URL)
 
     with pool.getconn() as conn:
         with conn.cursor() as cur:
@@ -250,9 +248,8 @@ def drop_table():
     Example:
         >>> drop_table()  # Removes applicants table completely
     """
-    pool = psycopg_pool.ConnectionPool(
-        "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
-    )
+    DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres@localhost:5432/module_3_db")
+    pool = psycopg_pool.ConnectionPool(DATABASE_URL)
     
     try:
         with pool.getconn() as conn:

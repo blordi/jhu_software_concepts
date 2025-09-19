@@ -18,8 +18,8 @@ def mock_database_modules(mocker):
 @pytest.fixture
 def app_instance(mock_database_modules):
     """Import and return the app after mocking."""
-    from src.webpage import app as app_module
-    return app_module.app
+    from src.webpage.app import create_app
+    return create_app({'TESTING': True})
 
 @pytest.fixture
 def client(app_instance):
@@ -29,30 +29,25 @@ def client(app_instance):
 
 @pytest.mark.buttons
 def test_post_pull_data_route(client, mocker):
-    """Test POST /rescrape (pull data button) - Returns redirect and triggers scraper"""
-    # Mock the scraper functions
+    """Test POST /rescrape route returns success response."""
     mock_run_rescrape = mocker.patch('src.webpage.app.run_rescrape')
     mock_add_to_db = mocker.patch('src.webpage.app.add_to_db')
     
-    # Test the POST request
     response = client.post('/rescrape')
     
-    # Should redirect (302) back to dashboard
-    assert response.status_code == 302
-    assert response.location.endswith('/')
-    
-    # Should have called the scraper functions
     mock_run_rescrape.assert_called_once()
     mock_add_to_db.assert_called_once()
+    
+    assert response.status_code == 200  
+    assert response.get_json() == {"ok": True}
 
-@pytest.mark.buttons  
-def test_post_update_analysis_route(client):
-    """Test POST /refresh (update analysis button) - Returns redirect"""
+@pytest.mark.buttons
+def test_post_update_analysis_route(client, mocker):
+    """Test POST /refresh route returns success response."""
     response = client.post('/refresh')
     
-    # Should redirect (302) back to dashboard 
-    assert response.status_code == 302
-    assert response.location.endswith('/')
+    assert response.status_code == 200  
+    assert response.get_json() == {"ok": True}
     
 @pytest.mark.buttons
 def test_busy_state_refresh_during_scrape(client, mocker):
@@ -135,7 +130,7 @@ def test_busy_state_injectable_control(client, mocker):
     
     # Test that refresh works normally
     response = client.post('/refresh')
-    assert response.status_code == 302
+    assert response.status_code == 200
 
 @pytest.mark.buttons
 def test_add_to_db_exception_handling_complete(mocker):

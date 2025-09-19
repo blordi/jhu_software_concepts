@@ -20,8 +20,8 @@ def mock_database_modules(mocker):
 @pytest.fixture
 def app_instance(mock_database_modules):
     """Import and return the app after mocking."""
-    from src.webpage import app as app_module
-    return app_module.app
+    from src.webpage.app import create_app
+    return create_app({'TESTING': True})
 
 @pytest.fixture
 def client(app_instance):
@@ -72,7 +72,7 @@ def test_end_to_end(client, mocker):
     response = client.post('/rescrape')
     mock_run_rescrape.assert_called_once()
     mock_add_to_db.assert_called_once()
-    assert response.status_code == 302
+    assert response.status_code == 200
     mocker.patch('src.webpage.app.execute_query', side_effect=create_mock_query(after_data))
     
     response = client.post('/refresh')
@@ -104,14 +104,14 @@ def test_multiple_pulls_uniqueness(client, mocker):
     response = client.post('/rescrape')
     assert mock_run_rescrape.call_count == 1
     assert mock_add_to_db.call_count == 1
-    assert response.status_code == 302
+    assert response.status_code == 200
 
     mocker.patch('src.webpage.app.execute_query', side_effect=create_mock_query(after_data))
     
     response = client.post('/rescrape')
-    assert mock_run_rescrape.call_count == 2  # Called twice now
-    assert mock_add_to_db.call_count == 2     # Called twice now
-    assert response.status_code == 302
+    assert mock_run_rescrape.call_count == 2  
+    assert mock_add_to_db.call_count == 2     
+    assert response.status_code == 200
     
     mocker.patch('src.webpage.app.execute_query', side_effect=create_mock_query(after_data))
 

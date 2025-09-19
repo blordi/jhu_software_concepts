@@ -199,14 +199,14 @@
             <div style="text-align: center; margin-bottom: 30px;">
                 <!-- Rescrape Button -->
                 <form method="POST" action="{{ url_for('rescrape') }}" style="display: inline; margin-right: 15px;">
-                    <button type="submit" class="rescrape-btn" onclick="return confirm('Are you sure you want to rescrape the data? This may take several minutes.')">
+                    <button data-testid="pull-data-btn" type="submit" class="rescrape-btn" onclick="return confirm('Are you sure you want to rescrape the data? This may take several minutes.')">
                         Pull Data
                     </button>
                 </form>
                 
                 <!--Refresh Button -->
                 <form method="POST" action="{{ url_for('refresh_dashboard') }}" style="display: inline;">
-                    <button type="submit" class="refresh-btn">
+                    <button data-testid="update-analysis-btn" type="submit" class="refresh-btn">
                         Update Analysis
                     </button>
                 </form>

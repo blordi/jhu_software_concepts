@@ -17,8 +17,8 @@ def mock_database_modules(mocker):
 @pytest.fixture
 def app_instance(mock_database_modules):
     """Import and return the app after mocking."""
-    from src.webpage.app import app
-    return app
+    from src.webpage.app import create_app
+    return create_app({'TESTING': True})
 
 @pytest.fixture
 def client(app_instance):
