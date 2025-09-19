@@ -1,13 +1,45 @@
 """
-Module to load data into a PostgreSQL database. Uses psycopg_pool for connecting to the database. Uses json for reading cleaned data.
-- Loads cleaned applicant data from 'llm_extend_applicant_data.json'.
+Module to load data into a PostgreSQL database.
+
+This module provides functionality for loading cleaned applicant data from JSON files
+into a PostgreSQL database. It uses psycopg_pool for efficient database connections
+and includes robust error handling for various file formats and encoding issues.
+
+.. note::
+   This module requires a PostgreSQL database running on localhost:5432
+   with database name 'module_3_db' and appropriate credentials.
+
+.. warning::
+   The create_applicant_table() function will DROP the existing table if it exists.
 """
+
 import psycopg_pool
 import json
 
 def load_data(filename):
     """
     Load data from a JSON file with fallback handling for problematic files.
+    
+    This function attempts to load JSON data using multiple strategies to handle
+    different file formats and encoding issues. It first tries standard JSON loading,
+    then falls back to JSONL format, and finally attempts to handle encoding issues.
+    
+    :param filename: Path to the JSON file to load
+    :type filename: str
+    :return: Dictionary containing the loaded data, with 'rows' key for JSONL format
+    :rtype: dict
+    :raises json.JSONDecodeError: When JSON parsing fails completely
+    :raises FileNotFoundError: When the specified file doesn't exist
+    :raises UnicodeDecodeError: When encoding issues cannot be resolved
+    
+    .. note::
+       For JSONL files, each line should contain a valid JSON object.
+       Invalid lines are silently skipped.
+       
+    Example:
+        >>> data = load_data('applicant_data.json')
+        >>> print(len(data['rows']))
+        150
     """
     try:
         with open(filename, 'r', encoding='utf-8') as f:
@@ -34,7 +66,38 @@ def load_data(filename):
     
 def create_applicant_table():
     """
-    Create applicant table in the PostgreSQL database.
+    Create the applicants table in the PostgreSQL database.
+    
+    This function establishes a connection to the PostgreSQL database and creates
+    the applicants table with the required schema. If the table already exists,
+    it will be dropped and recreated.
+    
+    :raises psycopg.Error: When database connection or SQL execution fails
+    
+    .. warning::
+       This function will DROP the existing applicants table if it exists,
+       resulting in permanent data loss.
+       
+    .. note::
+       The table includes an auto-incrementing primary key (p_id) and fields
+       for all applicant data including GPA, GRE scores, and LLM-generated fields.
+       
+    Database Schema:
+        - p_id: Primary key (auto-increment)
+        - program: TEXT - Program name
+        - comments: TEXT - Application comments
+        - date_added: TEXT - Date when record was added
+        - url: TEXT - Source URL
+        - status: TEXT - Application status (Accepted, Rejected, etc.)
+        - term: TEXT - Application term (Fall 2025, etc.)
+        - us_or_international: TEXT - Applicant type
+        - gpa: FLOAT - Grade Point Average
+        - gre: FLOAT - GRE total score
+        - gre_v: FLOAT - GRE Verbal score
+        - gre_aw: FLOAT - GRE Analytical Writing score
+        - degree: TEXT - Degree type (Masters, PhD)
+        - llm_generated_program: TEXT - LLM-processed program name
+        - llm_generated_university: TEXT - LLM-processed university name
     """
     pool = psycopg_pool.ConnectionPool(
         "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
@@ -72,10 +135,31 @@ def create_applicant_table():
 
 def  add_applicant_data_master_copy(data):
     """
-    Add applicant data to the PostgreSQL database.
-    Args:
-        data (list): List of dictionaries containing cleaned applicant data.
+    Add applicant data to the PostgreSQL database using master copy field mappings.
+    
+    This function inserts applicant data into the database using the field mappings
+    from the master copy JSON format. It expects specific field names that differ
+    from the standard format.
+    
+    :param data: Dictionary containing applicant data with 'rows' key
+    :type data: dict
+    :raises psycopg.Error: When database connection or insertion fails
+    :raises KeyError: When required fields are missing from data entries
+    
+    .. note::
+       This function expects the master copy format with fields like:
+       'semester', 'applicant_type', 'gre_total', 'gre_verbal'
+       
+    Required Fields in Each Entry:
+        - program, comments, date_added, url, status
+        - semester, applicant_type, gpa, gre_total, gre_verbal, gre_aw
+        - degree, llm-generated-program, llm-generated-university
+        
+    Example:
+        >>> data = {"rows": [{"program": "CS", "semester": "Fall 2025", ...}]}
+        >>> add_applicant_data_master_copy(data)
     """
+    
     pool = psycopg_pool.ConnectionPool(
         "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
     )
@@ -100,9 +184,29 @@ def  add_applicant_data_master_copy(data):
 
 def  add_applicant_data(data):
     """
-    Add applicant data to the PostgreSQL database.
-    Args:
-        data (list): List of dictionaries containing cleaned applicant data.
+    Add applicant data to the PostgreSQL database using standard field mappings.
+    
+    This function inserts applicant data into the database using the standard
+    field mappings. It processes each entry in the data and inserts it as a new
+    row in the applicants table.
+    
+    :param data: Dictionary containing applicant data with 'rows' key
+    :type data: dict
+    :raises psycopg.Error: When database connection or insertion fails
+    :raises KeyError: When required fields are missing from data entries
+    
+    .. note::
+       This function expects the standard format with fields like:
+       'Term', 'US/International', 'gre', 'gre_v', 'Degree'
+       
+    Required Fields in Each Entry:
+        - program, comments, date_added, url, status
+        - Term, US/International, gpa, gre, gre_v, gre_aw
+        - Degree, llm-generated-program, llm-generated-university
+        
+    Example:
+        >>> data = {"rows": [{"program": "CS", "Term": "Fall 2025", ...}]}
+        >>> add_applicant_data(data)
     """
     pool = psycopg_pool.ConnectionPool(
         "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
@@ -127,7 +231,25 @@ def  add_applicant_data(data):
     pool.close()
 
 def drop_table():
-    """Drop the applicants table."""
+    """
+    Drop the applicants table from the PostgreSQL database.
+    
+    This function connects to the database and drops the applicants table if it exists.
+    The operation is performed within a try-finally block to ensure the connection
+    pool is properly closed even if an error occurs.
+    
+    :raises psycopg.Error: When database connection or SQL execution fails
+    
+    .. warning::
+       This operation permanently deletes the applicants table and all its data.
+       This action cannot be undone.
+       
+    .. note::
+       Uses IF EXISTS clause, so no error occurs if table doesn't exist.
+       
+    Example:
+        >>> drop_table()  # Removes applicants table completely
+    """
     pool = psycopg_pool.ConnectionPool(
         "postgresql://postgres:Uphold-Removable-Radiator@localhost:5432/module_3_db"
     )

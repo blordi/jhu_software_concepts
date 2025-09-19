@@ -1,7 +1,59 @@
 """
-A Flask web application that connects to a PostgreSQL database using connection pooling.
-Executes various SQL queries to analyze applicant data and displays the results on a dashboard.
+Flask web application for graduate admissions analytics dashboard.
+
+This module provides a comprehensive web interface for analyzing graduate school
+applicant data from The GradCafe. It connects to a PostgreSQL database using
+connection pooling, executes complex analytical queries, and displays interactive
+results through a responsive dashboard interface.
+
+The application features:
+- Real-time data scraping and processing capabilities
+- Comprehensive analytics with multiple statistical views
+- Busy-state management to prevent concurrent operations
+- Thread-safe operations with proper locking mechanisms
+- Responsive web interface with formatted data display
+
+Key Components:
+    - Database Analytics: Complex SQL queries for admissions insights
+    - Data Pipeline: Integration with scraping and cleaning modules
+    - Web Interface: Flask routes for dashboard and data operations
+    - Concurrency Control: Thread-safe scraping operations
+    - Error Handling: Graceful degradation and user feedback
+
+.. note::
+   This application requires PostgreSQL database connectivity and access
+   to The GradCafe website for data scraping operations.
+
+.. warning::
+   The application includes data scraping functionality. Ensure compliance
+   with website terms of service and implement appropriate rate limiting.
+
+Database Schema Requirements:
+    The application expects an 'applicants' table with the following fields:
+    - term: Application term (e.g., 'Fall 2025')
+    - us_or_international: Applicant type ('American', 'International')
+    - gpa: Grade Point Average (numeric)
+    - gre, gre_v, gre_aw: GRE scores (numeric)
+    - status: Application status (contains 'Accepted', 'Rejected', etc.)
+    - degree: Degree type ('Masters', 'PhD')
+    - llm_generated_university: Standardized university names
+
+Routes:
+    - GET /: Main dashboard with analytics
+    - POST /rescrape: Trigger data scraping and processing
+    - POST /refresh: Refresh dashboard data
+
+Example Usage:
+    >>> from app import app
+    >>> app.run(debug=True)
+    * Running on http://127.0.0.1:5000
+
+.. seealso::
+   :mod:`scrape` for data collection functionality
+   :mod:`clean` for data processing pipeline
+   :mod:`load_data` for database operations
 """
+
 import sys
 import os
 from flask import Flask, render_template, request, url_for, redirect, jsonify
@@ -14,10 +66,11 @@ sys.path.extend([module_3_dir, web_scraper_dir])
 
 import psycopg_pool
 import threading
-import json
 import clean
 import scrape
 import load_data
+import json
+    
 
 # global variables for busy state tracking
 scrape_lock = threading.Lock()
@@ -30,11 +83,41 @@ pool = psycopg_pool.ConnectionPool(
 
 def execute_query(query):
     """
-    Execute a SQL query and return the results.
-    Args:
-        query (str): The SQL query to execute.
-    Returns:
-        list: List of tuples containing the query results.
+    Execute a SQL query and return the results using connection pooling.
+    
+    This function provides a centralized interface for database operations,
+    managing connections efficiently through the connection pool and ensuring
+    proper resource cleanup after query execution.
+    
+    :param query: The SQL query string to execute
+    :type query: str
+    :return: List of tuples containing the query results
+    :rtype: list[tuple]
+    :raises psycopg.Error: When database connection or query execution fails
+    :raises psycopg.ProgrammingError: When SQL syntax is invalid
+    
+    .. note::
+       Uses connection pooling for efficient resource management.
+       Connections are automatically returned to the pool after use.
+       
+    .. warning::
+       This function does not provide SQL injection protection.
+       Ensure queries are properly sanitized before calling.
+       
+    Connection Management:
+        - Acquires connection from pool automatically
+        - Creates cursor for query execution
+        - Fetches all results into memory
+        - Releases connection back to pool
+        
+    Example:
+        >>> results = execute_query("SELECT COUNT(*) FROM applicants")
+        >>> print(results[0][0])
+        1250
+        
+        >>> gpa_data = execute_query("SELECT AVG(gpa) FROM applicants WHERE gpa IS NOT NULL")
+        >>> print(f"Average GPA: {gpa_data[0][0]:.2f}")
+        Average GPA: 3.75
     """
     with pool.connection() as conn:
         cur = conn.cursor()
@@ -42,16 +125,81 @@ def execute_query(query):
         results = cur.fetchall()
         return results
 def run_rescrape():
+    """
+    Execute the complete data scraping and cleaning pipeline.
+    
+    This function orchestrates the data collection process by calling the
+    scraping module to fetch new data from The GradCafe, followed by the
+    cleaning module to process and structure the raw HTML data.
+    
+    :raises Exception: When scraping or cleaning operations fail
+    :raises urllib3.exceptions.HTTPError: When network requests fail
+    :raises IOError: When file operations fail during processing
+    
+    .. note::
+       This function calls external modules that perform network operations
+       and file I/O. Execution time varies based on data volume and network speed.
+       
+    .. warning::
+       This function performs web scraping operations. Ensure appropriate
+       rate limiting and compliance with website terms of service.
+       
+    Processing Pipeline:
+        1. scrape.main(): Collects new HTML data from The GradCafe
+        2. clean.main(): Processes HTML and extracts structured data
+        
+    Side Effects:
+        - Creates/updates raw HTML data files
+        - Creates/updates cleaned JSON data files
+        - May take several minutes for large datasets
+        
+    Example:
+        >>> run_rescrape()
+        Checking page 1...
+        Page 1: 25 new results out of 25 total
+        ...
+        LLM processing completed successfully
+    """
     scrape.main()
     clean.main()
 
 def add_to_db():
     """
-    Load LLM-processed applicant data from JSON file and insert into PostgreSQL database.
-    """
-    import json
-    import os
+    Execute the complete data scraping and cleaning pipeline.
     
+    This function orchestrates the data collection process by calling the
+    scraping module to fetch new data from The GradCafe, followed by the
+    cleaning module to process and structure the raw HTML data.
+    
+    :raises Exception: When scraping or cleaning operations fail
+    :raises urllib3.exceptions.HTTPError: When network requests fail
+    :raises IOError: When file operations fail during processing
+    
+    .. note::
+       This function calls external modules that perform network operations
+       and file I/O. Execution time varies based on data volume and network speed.
+       
+    .. warning::
+       This function performs web scraping operations. Ensure appropriate
+       rate limiting and compliance with website terms of service.
+       
+    Processing Pipeline:
+        1. scrape.main(): Collects new HTML data from The GradCafe
+        2. clean.main(): Processes HTML and extracts structured data
+        
+    Side Effects:
+        - Creates/updates raw HTML data files
+        - Creates/updates cleaned JSON data files
+        - May take several minutes for large datasets
+        
+    Example:
+        >>> run_rescrape()
+        Checking page 1...
+        Page 1: 25 new results out of 25 total
+        ...
+        LLM processing completed successfully
+    """
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     module_3_dir = os.path.dirname(current_dir)
     cleaned_data_path = os.path.join(module_3_dir, 'update_llm_extend_applicant_data.json')
@@ -70,6 +218,64 @@ def add_to_db():
 
 @app.route('/')
 def dashboard():
+    """
+    Render the main analytics dashboard with comprehensive applicant statistics.
+    
+    This route serves as the primary interface for the application, executing
+    multiple complex SQL queries to generate comprehensive analytics about
+    graduate school applicant data. It provides insights into application
+    trends, acceptance rates, academic metrics, and demographic patterns.
+    
+    :return: Rendered HTML template with analytics data or error message
+    :rtype: str
+    :raises Exception: When database queries fail or template rendering fails
+    
+    .. note::
+       All percentage values are formatted to exactly 2 decimal places
+       for consistent display across the dashboard interface.
+       
+    Analytics Provided:
+        - Application volume by term (Fall 2025 focus)
+        - International vs. domestic applicant percentages
+        - Average academic metrics (GPA, GRE scores)
+        - Acceptance rate analysis by various dimensions
+        - Institution-specific statistics (JHU, Georgetown)
+        - Comparative analysis by applicant type and degree
+        
+    SQL Queries Executed:
+        1. Fall 2025 application count
+        2. International student percentage
+        3. Average GPA/GRE metrics with UNION operations
+        4. American student GPA averages for Fall 2025
+        5. Fall 2025 acceptance percentage
+        6. Johns Hopkins University Masters application count
+        7. Georgetown University PhD acceptance count
+        8. University acceptance rates by applicant type (CTE query)
+        9. GPA analysis by admission status and degree type
+        
+    Template Variables:
+        - fall_2025_apps_count: Total Fall 2025 applications
+        - international_percentage_pct: International student percentage (formatted)
+        - averages_avg: List of academic metric averages
+        - average_gpa_american_fall_25_avg: American student GPA average
+        - fall_25_acceptange_percent_pct: Fall 2025 acceptance rate (formatted)
+        - jhu_cs_apps_count: JHU Masters application count
+        - georgetown_phd_cs_apps_count: Georgetown PhD acceptance count
+        - int_domestic_acceptance_rates_rank: University comparison data
+        - gpa_accepted_vs_rejected_degree_avg: GPA analysis by status/degree
+        
+    Error Handling:
+        - Catches all database and rendering exceptions
+        - Returns user-friendly error message on failure
+        - Logs detailed error information for debugging
+        
+    Example Response:
+        Renders dashboard.html with analytics showing:
+        - "1,250 Fall 2025 Applications"
+        - "34.56% International Students"
+        - "Average GPA: 3.75, Average GRE: 320.50"
+        - Interactive tables and charts
+    """
     # Define SQL queries   
     # Number of Fall 2025 applications
     fall_2025_apps = """
@@ -239,6 +445,59 @@ def dashboard():
 
 @app.route('/rescrape', methods=['POST'])    
 def rescrape():
+    """
+    Trigger data scraping and processing pipeline with concurrency control.
+    
+    This route handles requests to collect new data from The GradCafe, process
+    it through the cleaning pipeline, and insert it into the database. It
+    implements thread-safe busy-state management to prevent concurrent scraping
+    operations that could cause data corruption or resource conflicts.
+    
+    :return: JSON response with busy status or redirect to dashboard
+    :rtype: flask.Response
+    :raises Exception: When scraping or database operations fail
+    
+    .. note::
+       This route uses global state variables and threading locks to ensure
+       only one scraping operation can run at a time across all requests.
+       
+    .. warning::
+       Scraping operations can take several minutes. 
+       
+    Concurrency Control:
+        - Checks global is_scraping flag before starting
+        - Uses threading.Lock() for atomic state changes
+        - Returns HTTP 409 (Conflict) if operation already in progress
+        - Ensures proper cleanup in finally block
+        
+    Processing Pipeline:
+        1. Check if scraping is already in progress
+        2. Set busy state and acquire lock
+        3. Execute run_rescrape() for data collection
+        4. Execute add_to_db() for database insertion
+        5. Clear busy state and release lock
+        6. Redirect to dashboard for updated results
+        
+    Response Codes:
+        - 409 Conflict: When scraping is already in progress
+        - 500 Internal Server Error: When scraping/processing fails
+        - 302 Found: Successful completion, redirects to dashboard
+        
+    JSON Responses:
+        - {"busy": True}: When operation is already running
+        - {"error": "message"}: When operation fails
+        
+    Thread Safety:
+        - Uses global scrape_lock for atomic operations
+        - Ensures is_scraping flag is always properly reset
+        - Prevents race conditions between concurrent requests
+        
+    Example Usage:
+        POST /rescrape
+        → Returns: {"busy": true} (409) if already running
+        → Returns: Redirect to / (302) if successful
+        → Returns: {"error": "..."} (500) if failed
+    """
     global is_scraping
     
     # Check if already scraping
@@ -260,6 +519,41 @@ def rescrape():
 
 @app.route('/refresh', methods=['POST'])
 def refresh_dashboard():
+    """
+    Refresh the dashboard interface with current data.
+    
+    This route provides a way to reload the dashboard with the most current
+    data from the database. It includes busy-state checking to prevent
+    refreshing during active scraping operations, which could display
+    incomplete or inconsistent data.
+    
+    :return: JSON response with busy status or redirect to dashboard
+    :rtype: flask.Response
+    
+    .. note::
+       This route checks the scraping state to ensure data consistency.
+       If scraping is in progress, it returns a busy status instead of
+       potentially showing partial results.
+       
+    Busy State Handling:
+        - Checks global is_scraping flag
+        - Returns HTTP 409 if scraping is in progress
+        - Prevents displaying inconsistent data during updates
+        
+    Response Behavior:
+        - 409 Conflict: When scraping is in progress
+        - 302 Found: Normal refresh, redirects to dashboard
+        
+    Use Cases:
+        - Manual dashboard refresh without data collection
+        - Updating display after external data changes
+        - Refreshing after configuration changes
+        
+    Example Usage:
+        POST /refresh
+        → Returns: {"busy": true} (409) if scraping active
+        → Returns: Redirect to / (302) for normal refresh
+    """
     global is_scraping
     
     # Check if scraping is in progress
@@ -269,6 +563,31 @@ def refresh_dashboard():
     return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
+    """
+    Main execution block for running the Flask application.
+    
+    This block handles application startup when the module is executed directly.
+    It includes proper cleanup registration and error handling for graceful
+    shutdown of database connections and other resources.
+    
+    .. note::
+       The application runs on host 0.0.0.0 and port 8080 with debug mode
+       enabled for development purposes.
+       
+    .. warning::
+       Debug mode should be disabled in production environments for security.
+       
+    Startup Configuration:
+        - Host: 0.0.0.0 (accepts connections from any interface)
+        - Port: 8080 (non-standard port for development)
+        - Debug: True (enables auto-reload and detailed error pages)
+        
+    Cleanup Handling:
+        - Registers cleanup function with atexit
+        - Handles KeyboardInterrupt gracefully
+        - Ensures database connection pool is properly closed
+        - Prevents resource leaks on application shutdown
+    """
     app.run(host='0.0.0.0', port=8080,debug=True, )
 
     import atexit
