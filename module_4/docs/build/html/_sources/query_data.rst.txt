@@ -1,0 +1,7 @@
+query\_data module
+==================
+
+.. automodule:: query_data
+   :members:
+   :show-inheritance:
+   :undoc-members:
