@@ -11,9 +11,7 @@ sphinx:
 
 python:
    install:
-   - requirements: module_4/requirements.txt  # Add module_4/ path
-   - method: pip
-     path: module_4  # Also add this path
+   - requirements: module_4/requirements.txt  
 
 formats:
   - htmlzip
