@@ -599,7 +599,7 @@ def add_to_db():
 
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     """
     Main execution block for running the Flask application.
     
