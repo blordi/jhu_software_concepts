@@ -83,7 +83,7 @@ def test_end_to_end(client, mocker):
     assert '42.70%' in page_content
 
 @pytest.mark.integration
-def test_multiple_pulls_uniqueness_policy(client, mocker):
+def test_multiple_pulls_uniqueness(client, mocker):
     mock_run_rescrape = mocker.patch('src.webpage.app.run_rescrape')
     mock_add_to_db = mocker.patch('src.webpage.app.add_to_db')
 

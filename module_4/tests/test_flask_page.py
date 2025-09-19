@@ -80,14 +80,6 @@ def test_get_analysis_page_load(client, mocker):
     
     page_content = response.data.decode('utf-8')
     
-    # DEBUG: Let's see what's actually rendered
-    print("=== PERCENTAGE DEBUG ===")
-    import re
-    answer_matches = re.findall(r'Answer: [0-9.]+%?', page_content)
-    print("All Answer: with numbers found:")
-    for match in answer_matches:
-        print(f"  - '{match}'")
-    
     # ii. Page Contains both "Pull Data" and "Update Analysis" buttons
     assert 'Pull Data' in page_content, "Page should contain 'Pull Data' button"
     assert 'Update Analysis' in page_content, "Page should contain 'Update Analysis' button"
@@ -100,4 +92,15 @@ def test_get_analysis_page_load(client, mocker):
     assert 'Answer: 150' in page_content, "Should show Fall 2025 count with Answer: label"
     
     # Use flexible matching until we see what's rendered
-    assert ('Answer: 25.5' or 'Answer: 25.50' in page_content), "Should show international percentage with Answer: label"
+    assert ('Answer: 25.50' in page_content), "Should show international percentage with Answer: label"
+
+@pytest.mark.web
+def test_dashboard_error_handling(client, mocker):
+    """Test dashboard route handles database errors gracefully."""
+    # Mock execute_query to raise an exception
+    mocker.patch('src.webpage.app.execute_query', side_effect=Exception("Database connection failed"))
+    
+    response = client.get('/')
+    assert response.status_code == 200
+    assert b"Error executing queries: Database connection failed" in response.data
+
