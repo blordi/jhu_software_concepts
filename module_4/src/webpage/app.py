@@ -4,19 +4,24 @@ Executes various SQL queries to analyze applicant data and displays the results 
 """
 import sys
 import os
-from flask import Flask, render_template, request, url_for, redirect
+from flask import Flask, render_template, request, url_for, redirect, jsonify
 
 current_dir = os.path.dirname(os.path.abspath(__file__))  # webpage directory
 module_3_dir = os.path.dirname(current_dir)              # module_3 directory
 web_scraper_dir = os.path.join(module_3_dir, 'web_scraper')  # web_scraper directory
 
 sys.path.extend([module_3_dir, web_scraper_dir])
-import psycopg_pool
 
+import psycopg_pool
+import threading
 import json
 import clean
 import scrape
 import load_data
+
+# global variables for busy state tracking
+scrape_lock = threading.Lock()
+is_scraping = False
 
 app = Flask(__name__)
 pool = psycopg_pool.ConnectionPool(
@@ -234,15 +239,33 @@ def dashboard():
 
 @app.route('/rescrape', methods=['POST'])    
 def rescrape():
+    global is_scraping
+    
+    # Check if already scraping
+    if is_scraping:
+        return jsonify({"busy": True}), 409
+    
     try:
-        run_rescrape()
-        add_to_db()
+        with scrape_lock:
+            is_scraping = True
+            run_rescrape()
+            add_to_db()
     except Exception as e:
         print(f"Error occurred while rescraping: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        is_scraping = False
+    
     return redirect(url_for('dashboard'))
 
 @app.route('/refresh', methods=['POST'])
 def refresh_dashboard():
+    global is_scraping
+    
+    # Check if scraping is in progress
+    if is_scraping:
+        return jsonify({"busy": True}), 409
+    
     return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
