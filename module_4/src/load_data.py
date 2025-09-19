@@ -262,8 +262,8 @@ def drop_table():
     finally:
         pool.close()
 
-if __name__ == "__main__":
-    data = load_data('jhu_software_concepts/module_3/llm_extend_applicant_data_master_copy.json')
+# if __name__ == "__main__":
+#     data = load_data('jhu_software_concepts/module_3/llm_extend_applicant_data_master_copy.json')
     # drop_table()
     # create_applicant_table()
     # add_applicant_data_master_copy(data)
