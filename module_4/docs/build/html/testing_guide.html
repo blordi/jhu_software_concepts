@@ -57,7 +57,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#expected-test-selectors">Expected Test Selectors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#test-fixtures-and-doubles">Test Fixtures and Doubles</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#mock-database-modules">Mock Database Modules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flask-application-fixtures">Flask Application Fixtures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flask-application-factory">Flask Application Factory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#data-mocking-utilities">Data Mocking Utilities</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#integration-test-patterns">Integration Test Patterns</a></li>
 </ul>
@@ -214,28 +214,29 @@
 </pre></div>
 </div>
 </section>
-<section id="flask-application-fixtures">
-<h3>Flask Application Fixtures<a class="headerlink" href="#flask-application-fixtures" title="Link to this heading"></a></h3>
-<dl>
-<dt><strong>app_instance fixture:</strong></dt><dd><p>Provides access to the Flask application after database mocking:</p>
+<section id="flask-application-factory">
+<h3>Flask Application Factory<a class="headerlink" href="#flask-application-factory" title="Link to this heading"></a></h3>
+<p>The application uses Flask’s factory pattern, which requires special handling in tests:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">app_instance</span><span class="p">(</span><span class="n">mock_database_modules</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Import and return the app after mocking.&quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">src.webpage</span><span class="w"> </span><span class="kn">import</span> <span class="n">app</span> <span class="k">as</span> <span class="n">app_module</span>
-    <span class="k">return</span> <span class="n">app_module</span><span class="o">.</span><span class="n">app</span>
-</pre></div>
-</div>
-</dd>
-<dt><strong>client fixture:</strong></dt><dd><p>Provides a test client for making HTTP requests:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create app instance using factory pattern.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">src.webpage.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
+    <span class="k">return</span> <span class="n">create_app</span><span class="p">({</span><span class="s1">&#39;TESTING&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">client</span><span class="p">(</span><span class="n">app_instance</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a test client for the Flask application.&quot;&quot;&quot;</span>
     <span class="n">app_instance</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;TESTING&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">return</span> <span class="n">app_instance</span><span class="o">.</span><span class="n">test_client</span><span class="p">()</span>
 </pre></div>
 </div>
-</dd>
-</dl>
+<p><strong>Benefits for Testing:</strong></p>
+<ul class="simple">
+<li><p>Each test gets a fresh app instance</p></li>
+<li><p>Different configurations for different test scenarios</p></li>
+<li><p>Better isolation between tests</p></li>
+<li><p>Environment-specific database connections</p></li>
+</ul>
 </section>
 <section id="data-mocking-utilities">
 <h3>Data Mocking Utilities<a class="headerlink" href="#data-mocking-utilities" title="Link to this heading"></a></h3>

@@ -1,0 +1,213 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operational Notes &mdash; Graduate Admissions Analytics Dashboard 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Graduate Admissions Analytics Dashboard
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview_setup.html">Overview &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guide.html">Testing Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Graduate Admissions Analytics Dashboard</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Operational Notes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/operational_notes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="operational-notes">
+<h1>Operational Notes<a class="headerlink" href="#operational-notes" title="Link to this heading"></a></h1>
+<section id="busy-state-policy">
+<h2>Busy-State Policy<a class="headerlink" href="#busy-state-policy" title="Link to this heading"></a></h2>
+<p>The application prevents concurrent operations using thread-safe busy-state management.</p>
+<p><strong>Implementation:</strong>
+- Global <code class="docutils literal notranslate"><span class="pre">is_scraping</span></code> flag with <code class="docutils literal notranslate"><span class="pre">threading.Lock()</span></code>
+- Returns HTTP 409 <code class="docutils literal notranslate"><span class="pre">{&quot;busy&quot;:</span> <span class="pre">True}</span></code> when operations conflict
+- Automatic cleanup in <code class="docutils literal notranslate"><span class="pre">finally</span></code> blocks prevents permanent locks</p>
+<p><strong>Behavior:</strong>
+- Only one scraping operation allowed at a time
+- Dashboard refresh blocked during scraping for data consistency
+- Client should handle 409 responses and retry appropriately</p>
+</section>
+<section id="duplicate-strategy">
+<h2>Duplicate Strategy<a class="headerlink" href="#duplicate-strategy" title="Link to this heading"></a></h2>
+<p><strong>Duplicate Prevention:</strong>
+- Queries existing result IDs before scraping new pages
+- Extracts IDs from GradCafe URLs (<code class="docutils literal notranslate"><span class="pre">/result/{id}</span></code> pattern)
+- Uses set comparison: <code class="docutils literal notranslate"><span class="pre">new_ids</span> <span class="pre">=</span> <span class="pre">page_ids</span> <span class="pre">-</span> <span class="pre">existing_ids</span></code>
+- Stops after 5 consecutive pages with no new data</p>
+<p><strong>Data Processing:</strong>
+- New runs overwrite previous temporary files
+- Database transactions ensure atomic operations
+- LLM reprocesses all data for consistency</p>
+</section>
+<section id="uniqueness-keys">
+<h2>Uniqueness Keys<a class="headerlink" href="#uniqueness-keys" title="Link to this heading"></a></h2>
+<p><strong>Database Schema:</strong>
+- Primary key: <code class="docutils literal notranslate"><span class="pre">p_id</span></code> (auto-incrementing)
+- Natural uniqueness: URL field contains unique GradCafe result URLs</p>
+<p><strong>Data Integrity:</strong>
+- URL validation ensures GradCafe pattern compliance
+- Field validation: GPA (0-5), GRE (130-170) ranges
+- LLM processing standardizes university/program names</p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="common-local-issues">
+<h3>Common Local Issues<a class="headerlink" href="#common-local-issues" title="Link to this heading"></a></h3>
+<p><strong>Database Connection Errors:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p># Check PostgreSQL service
+net start postgresql-x64-16</p>
+<p># Test connection
+psql -U postgres -h localhost -d module_3_db</p>
+</div></blockquote>
+<p><strong>Module Import Errors:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p># Install dependencies
+pip install -r requirements.txt
+pip install psycopg[binary]</p>
+<p># Activate virtual environment
+.venvScriptsactivate</p>
+</div></blockquote>
+<p><strong>Web Scraping Issues:</strong>
+- Check network connectivity to thegradcafe.com
+- Add delays between requests if rate-limited
+- Debug HTML parsing if structure changes</p>
+<p><strong>Flask Application Issues:</strong>
+- Verify templates in correct folder
+- Check port 8080 availability: <code class="docutils literal notranslate"><span class="pre">netstat</span> <span class="pre">-an</span> <span class="pre">|</span> <span class="pre">findstr</span> <span class="pre">:8080</span></code>
+- Enable debug mode: <code class="docutils literal notranslate"><span class="pre">app.run(debug=True)</span></code></p>
+</section>
+<section id="common-ci-issues">
+<h3>Common CI Issues<a class="headerlink" href="#common-ci-issues" title="Link to this heading"></a></h3>
+<p><strong>GitHub Actions Failures:</strong>
+.. code-block:: yaml</p>
+<blockquote>
+<div><p># Set environment variables
+env:</p>
+<blockquote>
+<div><p>DATABASE_URL: postgresql://postgres:postgres&#64;localhost:5432/test_db</p>
+</div></blockquote>
+<p># Add PostgreSQL service
+services:</p>
+<blockquote>
+<div><dl>
+<dt>postgres:</dt><dd><p>image: postgres:13
+env:</p>
+<blockquote>
+<div><p>POSTGRES_PASSWORD: postgres</p>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+<p><strong>Coverage Issues:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p># Ensure all test files committed
+git add tests/</p>
+<p># Use absolute paths
+pytest –cov=./src –cov-report=term-missing</p>
+</div></blockquote>
+<p><strong>Deployment Issues:</strong>
+- Use environment variables for production config
+- Ensure static files properly served
+- Run database setup: <code class="docutils literal notranslate"><span class="pre">create_applicant_table()</span></code></p>
+<p><strong>Performance Tips:</strong>
+- Monitor connection pool usage
+- Consider pagination for large datasets
+- Implement exponential backoff for retries
+- Add health check endpoint: <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/health</span></code></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Benjamin Lordi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

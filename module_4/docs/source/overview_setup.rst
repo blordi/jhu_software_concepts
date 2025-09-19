@@ -8,29 +8,38 @@ How to Run the App
 
     pip install -r requirements.txt
 
-2. Set up PostgreSQL database with connection string
-3. Run the Flask application::
+2. Set up PostgreSQL database and configure connection
+
+3. Set environment variables (optional)::
+
+    # Windows Command Prompt
+    set DATABASE_URL=postgresql://postgresd@localhost:5432/module_3_db
+    
+    # Windows PowerShell
+    $env:DATABASE_URL="postgresql://postgres@localhost:5432/module_3_db"
+
+4. Run the Flask application::
 
     python src/webpage/app.py
 
 Required Environment Variables
 ------------------------------
 
-None
+* ``DATABASE_URL``: PostgreSQL connection string (optional)
+  
+  - Default: ``postgresql://postgres@localhost:5432/module_3_db``
+  - Format: ``postgresql://username:password@host:port/database``
+  - Used by all modules for database connectivity
 
-How to Run Tests
-----------------
+Application Factory
+~~~~~~~~~~~~~~~~~~~
 
-Run all tests::
+The application uses Flask's factory pattern for better testability::
 
-    pytest
+    from src.webpage.app import create_app
     
-    or
-
-    pytest -m "web or buttons or analysis or db or integration"
-
-Run specific test markers::
-
-    pytest -m web
-    pytest -m buttons
-    pytest -m integration
+    # Create app with default config
+    app = create_app()
+    
+    # Create app with custom config
+    app = create_app({'DATABASE_URL': 'custom_db_url', 'TESTING': True})

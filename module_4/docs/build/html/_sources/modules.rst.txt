@@ -6,16 +6,31 @@ This section provides detailed documentation for all modules in the Graduate Adm
 Web Application (app.py)
 -------------------------
 
-The main Flask application that serves the analytics dashboard.
+Flask Application Factory
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The application uses the factory pattern for improved testability and configuration management.
 
 **Key Functions:**
 
+* ``create_app(config=None)`` - Flask application factory function
 * ``execute_query(query)`` - Execute SQL queries with connection pooling
 * ``run_rescrape()`` - Trigger data scraping and cleaning pipeline  
 * ``add_to_db()`` - Load processed data into database
-* ``dashboard()`` - Main analytics dashboard route
-* ``rescrape()`` - Handle data collection requests
-* ``refresh_dashboard()`` - Refresh dashboard with current data
+
+**Routes:**
+
+* ``GET /`` - Main analytics dashboard
+* ``POST /rescrape`` - Trigger data collection (returns ``{"ok": true}`` on success)
+* ``POST /refresh`` - Refresh dashboard data (returns ``{"ok": true}`` on success)
+
+**Configuration:**
+
+The factory accepts configuration dictionaries for different environments:
+
+* ``DATABASE_URL`` - Database connection string
+* ``TESTING`` - Enable testing mode
+* Standard Flask configuration options
 
 Data Loading (load_data.py)
 ----------------------------

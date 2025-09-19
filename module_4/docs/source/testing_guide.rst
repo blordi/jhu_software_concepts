@@ -107,30 +107,31 @@ All test files use automatic database module mocking:
             'load_data': mocker.MagicMock()
         })
 
-Flask Application Fixtures
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Flask Application Factory
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**app_instance fixture:**
-    Provides access to the Flask application after database mocking:
-    
-    .. code-block:: python
-    
-        @pytest.fixture
-        def app_instance(mock_database_modules):
-            """Import and return the app after mocking."""
-            from src.webpage import app as app_module
-            return app_module.app
+The application uses Flask's factory pattern, which requires special handling in tests:
 
-**client fixture:**
-    Provides a test client for making HTTP requests:
-    
-    .. code-block:: python
-    
-        @pytest.fixture
-        def client(app_instance):
-            """Create a test client for the Flask application."""
-            app_instance.config['TESTING'] = True
-            return app_instance.test_client()
+.. code-block:: python
+
+    @pytest.fixture
+    def app_instance(mock_database_modules):
+        """Create app instance using factory pattern."""
+        from src.webpage.app import create_app
+        return create_app({'TESTING': True})
+
+    @pytest.fixture
+    def client(app_instance):
+        """Create a test client for the Flask application."""
+        app_instance.config['TESTING'] = True
+        return app_instance.test_client()
+
+**Benefits for Testing:**
+
+* Each test gets a fresh app instance
+* Different configurations for different test scenarios
+* Better isolation between tests
+* Environment-specific database connections
 
 Data Mocking Utilities
 ~~~~~~~~~~~~~~~~~~~~~~

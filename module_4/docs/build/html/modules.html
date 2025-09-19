@@ -47,7 +47,10 @@
 <li class="toctree-l1"><a class="reference internal" href="overview_setup.html">Overview &amp; Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#web-application-app-py">Web Application (app.py)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#web-application-app-py">Web Application (app.py)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#flask-application-factory">Flask Application Factory</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#data-loading-load-data-py">Data Loading (load_data.py)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#data-cleaning-clean-py">Data Cleaning (clean.py)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#web-scraping-scrape-py">Web Scraping (scrape.py)</a></li>
@@ -86,16 +89,30 @@
 <p>This section provides detailed documentation for all modules in the Graduate Admissions Analytics application.</p>
 <section id="web-application-app-py">
 <h2>Web Application (app.py)<a class="headerlink" href="#web-application-app-py" title="Link to this heading"></a></h2>
-<p>The main Flask application that serves the analytics dashboard.</p>
+<section id="flask-application-factory">
+<h3>Flask Application Factory<a class="headerlink" href="#flask-application-factory" title="Link to this heading"></a></h3>
+<p>The application uses the factory pattern for improved testability and configuration management.</p>
 <p><strong>Key Functions:</strong></p>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">create_app(config=None)</span></code> - Flask application factory function</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">execute_query(query)</span></code> - Execute SQL queries with connection pooling</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">run_rescrape()</span></code> - Trigger data scraping and cleaning pipeline</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">add_to_db()</span></code> - Load processed data into database</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dashboard()</span></code> - Main analytics dashboard route</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">rescrape()</span></code> - Handle data collection requests</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">refresh_dashboard()</span></code> - Refresh dashboard with current data</p></li>
 </ul>
+<p><strong>Routes:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/</span></code> - Main analytics dashboard</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/rescrape</span></code> - Trigger data collection (returns <code class="docutils literal notranslate"><span class="pre">{&quot;ok&quot;:</span> <span class="pre">true}</span></code> on success)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/refresh</span></code> - Refresh dashboard data (returns <code class="docutils literal notranslate"><span class="pre">{&quot;ok&quot;:</span> <span class="pre">true}</span></code> on success)</p></li>
+</ul>
+<p><strong>Configuration:</strong></p>
+<p>The factory accepts configuration dictionaries for different environments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> - Database connection string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TESTING</span></code> - Enable testing mode</p></li>
+<li><p>Standard Flask configuration options</p></li>
+</ul>
+</section>
 </section>
 <section id="data-loading-load-data-py">
 <h2>Data Loading (load_data.py)<a class="headerlink" href="#data-loading-load-data-py" title="Link to this heading"></a></h2>
